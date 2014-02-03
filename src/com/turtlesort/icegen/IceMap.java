@@ -49,6 +49,9 @@ public class IceMap {
 		this.map[x][y] = tile;
 	}
 
+	/**
+	 * Note: Out of bounds locations are returned as a solid tile.
+	 */
 	public Tile getTileType(int x, int y){
 		return isTile(x,y) ? this.map[x][y] : Tile.SOLID;
 	}

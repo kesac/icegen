@@ -14,8 +14,13 @@ public class TextRenderer {
 			for(int x = 0; x < this.map.getWidth(); x++){
 				
 				IceMap.Tile tile = this.map.getTileType(x, y);
-				
-				if(tile == IceMap.Tile.ICE){
+				if(this.map.isStart(x, y)){
+					System.out.print('S');
+				}
+				else if(this.map.isEnd(x, y)){
+					System.out.print('E');
+				}
+				else if(tile == IceMap.Tile.ICE){
 					System.out.print('~');
 				}
 				else if(tile == IceMap.Tile.FLOOR){

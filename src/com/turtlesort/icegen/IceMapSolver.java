@@ -3,9 +3,15 @@ package com.turtlesort.icegen;
 import java.util.HashSet;
 import java.util.LinkedList;
 
+import com.turtlesort.icegen.IceMap.Tile;
+
+/**
+ * Finds solutions to for an ice map.
+ */
 public class IceMapSolver {
 
 	private static final int DEFAULT_MOVE_LIMIT = 10;
+	
 	public static enum Direction {
 		UP, DOWN, LEFT, RIGHT
 	}
@@ -14,7 +20,10 @@ public class IceMapSolver {
 	private boolean trackVisitedTiles;
 	private HashSet<String> visitedTiles;
 	
-	
+	/**
+	 * Constructor.
+	 * @param map The ice map to solve.
+	 */
 	public IceMapSolver(IceMap map){
 		this.map = map;
 		
@@ -68,6 +77,9 @@ public class IceMapSolver {
 		return tree.getSolutions();
 	}
 	
+	/**
+	 * Depth first search.
+	 */
 	private void findSolution(NavigationNode node, Direction lastMove, int depth, int limit){
 		
 		if(++depth > limit) return;
@@ -82,12 +94,6 @@ public class IceMapSolver {
 	/**
 	 * Given a starting position, checks whether it is possible to move either up, down, left, or right
 	 * to a new tile.
-	 * 
-	 * @param x - Starting X location
-	 * @param y - Starting Y location
-	 * @return A LinkedList of NavigationNodes for each direction that resulted in moving to a
-	 * new tile. If there was no direction that resulted in a new destination, the LinkedList will
-	 * be empty.
 	 */
 	private LinkedList<NavigationNode> findChildren(int x, int y, Direction lastMove){
 		
@@ -115,12 +121,6 @@ public class IceMapSolver {
 	 * Given a position on the map, checks whether it is possible to move in Direction <code>d</code> to
 	 * a new tile. If the specified position is the the end tile or if a possible move results in
 	 * a tile that has been traveled to before, null is returned.
-	 * 
-	 * @param x - Starting X location
-	 * @param y - Starting Y location
-	 * @param d - Direction to move in
-	 * @return If it is possible to move to a new tile, this method returns a NavigationNode
-	 * containing information of the move. Otherwise, null is returned.
 	 */
 	private NavigationNode findChild(int x, int y, Direction d){
 		
@@ -129,45 +129,50 @@ public class IceMapSolver {
 		int newX = x;
 		int newY = y;
 		
-		if(d == Direction.UP && this.map.isTile(newX, newY - 1)){
-			while(this.map.getTileType(newX, newY - 1) != IceMap.Tile.SOLID){ // Floor or ice?
-				newY--;	
-				if(this.map.getTileType(newX, newY - 1) == IceMap.Tile.FLOOR){
-					newY--;	break;
-				}
+		if(d == Direction.UP){
+			
+			IceMap.Tile tile = this.map.getTileType(newX, newY - 1);
+			
+			while(tile != IceMap.Tile.SOLID){ // Floor or ice?
+				newY--;
+				if(tile == IceMap.Tile.FLOOR) break;
+				tile = this.map.getTileType(newX, newY - 1);
 			}
 		}
 		
-		if(d == Direction.DOWN && this.map.isTile(newX, newY + 1)){
-			while(this.map.getTileType(newX, newY + 1) != IceMap.Tile.SOLID){ 
+		if(d == Direction.DOWN){
+			Tile tile = this.map.getTileType(newX, newY + 1);
+			
+			while(tile != IceMap.Tile.SOLID){ 
 				newY++;	
-				if(this.map.getTileType(newX, newY + 1) == IceMap.Tile.FLOOR){
-					newY++;	break;
-				}
+				if(tile == IceMap.Tile.FLOOR) break;
+				tile = this.map.getTileType(newX, newY + 1);
 			}
 		}
 		
-		if(d == Direction.LEFT && this.map.isTile(newX - 1, newY)){
-			while(this.map.getTileType(newX - 1, newY) != IceMap.Tile.SOLID){
-				newX--;	
-				if(this.map.getTileType(newX - 1, newY) == IceMap.Tile.FLOOR){
-					newX--;break;
-				}
+		if(d == Direction.LEFT){
+			Tile tile = this.map.getTileType(newX - 1, newY);
+			
+			while(tile != IceMap.Tile.SOLID){
+				newX--;
+				if(tile == IceMap.Tile.FLOOR)break;
+				tile = this.map.getTileType(newX - 1, newY);
 			}
 		}
 
-		if(d == Direction.RIGHT && this.map.isTile(newX + 1, newY)){
-			while(this.map.getTileType(newX + 1, newY) != IceMap.Tile.SOLID){
+		if(d == Direction.RIGHT){
+			Tile tile = this.map.getTileType(newX + 1, newY);
+			
+			while(tile != IceMap.Tile.SOLID){
 				newX++;	
-				if(this.map.getTileType(newX + 1, newY) == IceMap.Tile.FLOOR){
-					newX++;	break;
-				}
+				if(tile == IceMap.Tile.FLOOR) break;
+				tile = this.map.getTileType(newX + 1, newY);
 			}
 		}
 
 
 		
-		if((newX != x || newY != y) && !this.visitedTiles.contains(newX + "," + newY) /*newX != x || newY != y*/){
+		if((newX != x || newY != y) && !this.visitedTiles.contains(newX + "," + newY)){
 		
 			NavigationNode node = new NavigationNode();
 			node.x = newX;
@@ -178,11 +183,13 @@ public class IceMapSolver {
 			if(this.map.isEnd(newX, newY)){
 				node.isEnd = true;
 			}
+			
+			// We skip adding the end node to visited tiles so we find multiple solutions
 			else if(this.trackVisitedTiles){
-				this.visitedTiles.add(newX + "," + newY); // We skip adding the end node to visited tiles so we find multiple solutions
+				
+				this.visitedTiles.add(newX + "," + newY);
 			}
 			
-			//System.out.println("("+x+","+y+")" + "-> " + d.toString() + " -> (" + node.x + "," + node.y + ")");
 			
 			return node;
 		}
