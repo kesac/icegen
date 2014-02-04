@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" width="13" height="13" tilewidth="32" tileheight="32">
+ <tileset firstgid="1" name="icemaptileset" tilewidth="32" tileheight="32">
+  <image source="icemaptileset.png" width="128" height="64"/>
+ </tileset>
+ <layer name="Tile Layer 1" width="13" height="13">
+  <data encoding="base64" compression="zlib">
+   eJxjZWBgYMWCWXCIwzAjFMPYTEgYWZ4Rix58mBWPHkJm4LMHm5tJdRu6Hmzm4HI3Lnvw2Y0rrMkNA3zhQW4Y4EsH+MINHTPjkQMARKoBrQ==
+  </data>
+ </layer>
+</map>
