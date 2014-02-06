@@ -6,6 +6,8 @@ import java.util.Comparator;
 import java.util.LinkedList;
 
 import com.turtlesort.icegen.IceMapSolver.Direction;
+import com.turtlesort.icegen.visualizer.MapVisualizer;
+import com.turtlesort.icegen.visualizer.TextVisualizer;
 
 public class Start {
 
@@ -29,12 +31,15 @@ public class Start {
 		map.setTileType(map.getWidth()-1, 7, IceMap.Tile.SOLID);
 		/**/
 
-		IceMap map = IceMap.parseJSONFile("maps/map1.json");
+		String filePath = "maps/map1.json";
+		IceMap map = IceMap.parseJSONFile(filePath);
+		map.setName("maps/map1.json");
 		
 		
 		//IceMap map = new IceMapGenerator(15,15,20,20).generate();
 		
-		TextRenderer r = new TextRenderer(map);
+		System.out.println(map.getName());
+		TextVisualizer r = new TextVisualizer(map);
 		r.render();
 
 		IceMapSolver s = new IceMapSolver(map);
@@ -67,6 +72,8 @@ public class Start {
 			System.out.println("No solutions equal to or under " + moveLimit + " moves");
 		}
 
+		MapVisualizer visualizer = new MapVisualizer(map);
+		visualizer.setVisible(true);
 		/**/
 	}
 

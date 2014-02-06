@@ -1,10 +1,13 @@
-package com.turtlesort.icegen;
+package com.turtlesort.icegen.visualizer;
 
-public class TextRenderer {
+import com.turtlesort.icegen.IceMap;
+import com.turtlesort.icegen.IceMap.Tile;
+
+public class TextVisualizer {
 
 	private IceMap map;
 	
-	public TextRenderer(IceMap map){
+	public TextVisualizer(IceMap map){
 		this.map = map;
 	}
 	

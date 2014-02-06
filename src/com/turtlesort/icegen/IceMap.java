@@ -23,6 +23,8 @@ public class IceMap {
 	private int endX;
 	private int endY;
 	
+	private String mapName;
+	
 	/**
 	 * Creates a grid with the desired dimensions. By default, all tiles
 	 * are ice tiles.
@@ -57,6 +59,10 @@ public class IceMap {
 		this.map[x][y] = tile;
 	}
 
+	public void setName(String name){
+		this.mapName = name;
+	}
+	
 	/**
 	 * Note: Out of bounds locations are returned as a solid tile.
 	 */
@@ -64,6 +70,10 @@ public class IceMap {
 		return isTile(x,y) ? this.map[x][y] : Tile.SOLID;
 	}
 
+	public String getName(){
+		return this.mapName;
+	}
+	
 	public int getStartX() {
 		return this.startX;
 	}
