@@ -1,5 +1,8 @@
 package com.turtlesort.icegen;
 
+import java.io.File;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedList;
 
 import com.turtlesort.icegen.IceMapSolver.Direction;
@@ -26,33 +29,45 @@ public class Start {
 		map.setTileType(map.getWidth()-1, 7, IceMap.Tile.SOLID);
 		/**/
 
-		IceMap map = new IceMapGenerator(15,15,20,20).generate();
+		IceMap map = IceMap.parseJSONFile("maps/map1.json");
+		
+		
+		//IceMap map = new IceMapGenerator(15,15,20,20).generate();
 		
 		TextRenderer r = new TextRenderer(map);
 		r.render();
 
 		IceMapSolver s = new IceMapSolver(map);
+		int moveLimit = 25;
+		
+		LinkedList<Direction[]> solutions = s.solve(moveLimit);
 
-		LinkedList<Direction[]> solutions = s.solve(5);
-
+		Collections.sort(solutions, new Comparator<Direction[]>(){
+			@Override
+			public int compare(Direction[] arg0, Direction[] arg1) {
+				return arg0.length - arg1.length;
+			}
+		});
+		
 		if(solutions.size() > 0){
 			
-			for(Direction[] solution : solutions){
-				//if(solution.length > 7){
-					System.out.print("(S)");
+			for(int i = 0; i < 5 && i < solutions.size(); i++){
+				
+					Direction[] solution = solutions.get(i);
+					System.out.print("(S)" + solution.length);
+					
 					for(Direction d : solution){
-						System.out.print(" -> " + d.toString());
+						System.out.print(" -> " + d.toString().charAt(0));
 					}
 					System.out.println();
-				//}
-
+					
 			}
 		}
 		else{
-			System.out.println("No solutions");
+			System.out.println("No solutions equal to or under " + moveLimit + " moves");
 		}
 
-
+		/**/
 	}
 
 

@@ -1,5 +1,13 @@
 package com.turtlesort.icegen;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.json.JSONTokener;
+
 /**
  * An instance of this class represents a grid of tiles. 
  */
@@ -90,6 +98,58 @@ public class IceMap {
 	
 	public int getHeight(){
 		return this.map[0].length;
+	}
+	
+	public static IceMap parseJSONFile(String pathToFile){
+		
+		try {
+			FileReader reader = new FileReader(new File(pathToFile));
+			JSONTokener tokener = new JSONTokener(reader);
+			JSONObject obj = new JSONObject(tokener);
+
+			JSONArray layers = (JSONArray)obj.get("layers");
+			JSONObject layerData = (JSONObject)layers.get(0);
+			JSONArray mapData = (JSONArray)layerData.get("data");
+
+			int width = obj.getInt("width");
+			int height = obj.getInt("height");
+
+			IceMap map = new IceMap(width, height);
+			
+			for(int i = 0; i < width; i++){
+				for(int j = 0; j < height; j++){
+					
+					int type = mapData.getInt(j * width + i);
+					
+					if(type == 1){
+						map.setTileType(i, j, Tile.ICE);
+					}
+					else if(type == 2){
+						map.setTileType(i, j, Tile.FLOOR);
+					}
+					else if(type == 3){
+						map.setTileType(i, j, Tile.FLOOR);
+						map.setStartTile(i, j);
+					}
+					else if(type == 4){
+						map.setTileType(i, j, Tile.FLOOR);
+						map.setEndTile(i, j);
+					}
+					else if(type == 5){
+						map.setTileType(i, j, Tile.SOLID);
+					}
+				}
+			}
+			
+			return map;
+			
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+			return null;
+		}
+
+		
+
 	}
 	
 }
