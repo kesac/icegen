@@ -27,9 +27,9 @@ public class Start {
 		map.setTileType(map.getWidth()-1, 7, IceMap.Tile.SOLID);
 		/**/
 
-		String filePath = "maps/map1.json";
+		String filePath = "maps/map2.json";
 		IceMap map = IceMap.parseJSONFile(filePath);
-		map.setName("maps/map1.json");
+		map.setName(filePath);
 		
 		// map = new IceMapGenerator(15,15,20,20).generate();
 		// map.setName("Randomly Generated");
