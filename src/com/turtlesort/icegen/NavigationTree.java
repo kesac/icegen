@@ -1,7 +1,6 @@
 package com.turtlesort.icegen;
 
 import java.util.LinkedList;
-import com.turtlesort.icegen.IceMapSolver.Direction;
 
 public class NavigationTree {
 
@@ -14,23 +13,24 @@ public class NavigationTree {
 		this.root.direction = null;
 	}
 	
-	public LinkedList<Direction[]> getSolutions(){
-		LinkedList<Direction[]> solutions = new LinkedList<Direction[]>();
+	public LinkedList<NavigationNode[]> getSolutions(){
+		LinkedList<NavigationNode[]> solutions = new LinkedList<NavigationNode[]>();
 		
-		this.getSolutionRecursive(solutions, new LinkedList<Direction>(), root);
+		this.getSolutionRecursive(solutions, new LinkedList<NavigationNode>(), root);
 		
 		return solutions;
 	}
 	
-	private void getSolutionRecursive(LinkedList<Direction[]> solutions, LinkedList<Direction> stack, NavigationNode node){
+	private void getSolutionRecursive(LinkedList<NavigationNode[]> solutions, LinkedList<NavigationNode> stack, NavigationNode node){
 		
 		if(node.direction != null){
-			stack.addLast(node.direction);
+			//stack.addLast(node.direction);
+			stack.addLast(node);
 		}
 		
 		if(node.children.size() == 0){
 			if(node.isEnd){
-				Direction[] solution = new Direction[stack.size()];
+				NavigationNode[] solution = new NavigationNode[stack.size()];
 				
 				
 				for(int i = 0; i < stack.size(); i++){

@@ -1,12 +1,8 @@
 package com.turtlesort.icegen;
 
-import java.io.File;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.LinkedList;
 
-import com.turtlesort.icegen.IceMapSolver.Direction;
-import com.turtlesort.icegen.visualizer.MapVisualizer;
+import com.turtlesort.icegen.visualizer.SolutionVisualizer;
 import com.turtlesort.icegen.visualizer.TextVisualizer;
 
 public class Start {
@@ -35,8 +31,8 @@ public class Start {
 		IceMap map = IceMap.parseJSONFile(filePath);
 		map.setName("maps/map1.json");
 		
-		
-		//IceMap map = new IceMapGenerator(15,15,20,20).generate();
+		// map = new IceMapGenerator(15,15,20,20).generate();
+		// map.setName("Randomly Generated");
 		
 		System.out.println(map.getName());
 		TextVisualizer r = new TextVisualizer(map);
@@ -45,24 +41,17 @@ public class Start {
 		IceMapSolver s = new IceMapSolver(map);
 		int moveLimit = 25;
 		
-		LinkedList<Direction[]> solutions = s.solve(moveLimit);
-
-		Collections.sort(solutions, new Comparator<Direction[]>(){
-			@Override
-			public int compare(Direction[] arg0, Direction[] arg1) {
-				return arg0.length - arg1.length;
-			}
-		});
+		LinkedList<NavigationNode[]> solutions = s.solve(moveLimit);
 		
 		if(solutions.size() > 0){
 			
 			for(int i = 0; i < 5 && i < solutions.size(); i++){
 				
-					Direction[] solution = solutions.get(i);
+					NavigationNode[] solution = solutions.get(i);
 					System.out.print("(S)" + solution.length);
 					
-					for(Direction d : solution){
-						System.out.print(" -> " + d.toString().charAt(0));
+					for(NavigationNode d : solution){
+						System.out.print(" -> " + d.direction.toString().charAt(0));
 					}
 					System.out.println();
 					
@@ -72,7 +61,7 @@ public class Start {
 			System.out.println("No solutions equal to or under " + moveLimit + " moves");
 		}
 
-		MapVisualizer visualizer = new MapVisualizer(map);
+		SolutionVisualizer visualizer = new SolutionVisualizer(map, solutions.get(0));
 		visualizer.setVisible(true);
 		/**/
 	}

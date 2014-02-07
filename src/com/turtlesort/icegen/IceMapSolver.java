@@ -1,5 +1,7 @@
 package com.turtlesort.icegen;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedList;
 
@@ -35,9 +37,11 @@ public class IceMapSolver {
 	 * tile to the end tile.
 	 * @param moveLimit The maximum number of moves a solution should have.
 	 * @return A linked list of solutions. Each solution is an array of moves represented
-	 * as directions to take.
+	 * as directions to take. The list is sorted in ascending order according to the number of moves per solution. The
+	 * first solution (at index 0) always has the least moves. If there are no solutions then
+	 * the linked list will be empty.
 	 */
-	public LinkedList<Direction[]> solve(int moveLimit){
+	public LinkedList<NavigationNode[]> solve(int moveLimit){
 		return this.solve(moveLimit, false);
 	}
 	
@@ -47,9 +51,11 @@ public class IceMapSolver {
 	 * tile to the end tile.
 	 * @param moveLimit The maximum number of moves a solution should have.
 	 * @return A linked list of solutions. Each solution is an array of moves represented
-	 * as directions to take.
+	 * as directions to take. The list is sorted in ascending order according to the number of moves per solution. The
+	 * first solution (at index 0) always has the least moves. If there are no solutions then
+	 * the linked list will be empty.
 	 */
-	public LinkedList<Direction[]> solve(){
+	public LinkedList<NavigationNode[]> solve(){
 		return this.solve(DEFAULT_MOVE_LIMIT, false);
 	}
 	
@@ -61,9 +67,11 @@ public class IceMapSolver {
 	 * @param trackVisitedTiles If true, solutions that share intermediate tiles
 	 * as other solutions are ignored.
 	 * @return A linked list of solutions. Each solution is an array of moves represented
-	 * as directions to take.
+	 * as directions to take. The list is sorted in ascending order according to the number of moves per solution. The
+	 * first solution (at index 0) always has the least moves. If there are no solutions then
+	 * the linked list will be empty.
 	 */
-	public LinkedList<Direction[]> solve(int moveLimit, boolean trackVisitedTiles){
+	public LinkedList<NavigationNode[]> solve(int moveLimit, boolean trackVisitedTiles){
 		
 		this.visitedTiles = new HashSet<String>();
 		
@@ -74,7 +82,17 @@ public class IceMapSolver {
 		this.findSolution(tree.root, null, 0,  moveLimit);
 		
 		//tree.printSolutions();
-		return tree.getSolutions();
+		
+		LinkedList<NavigationNode[]> solutions = tree.getSolutions();
+		
+		Collections.sort(solutions, new Comparator<NavigationNode[]>(){
+			@Override
+			public int compare(NavigationNode[] arg0, NavigationNode[] arg1) {
+				return arg0.length - arg1.length;
+			}
+		});
+		
+		return solutions;
 	}
 	
 	/**

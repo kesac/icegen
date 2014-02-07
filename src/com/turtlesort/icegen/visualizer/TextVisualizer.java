@@ -1,7 +1,6 @@
 package com.turtlesort.icegen.visualizer;
 
 import com.turtlesort.icegen.IceMap;
-import com.turtlesort.icegen.IceMap.Tile;
 
 public class TextVisualizer {
 
