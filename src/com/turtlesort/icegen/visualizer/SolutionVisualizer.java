@@ -45,7 +45,7 @@ public class SolutionVisualizer extends JFrame{
 		this.setTitle("Map: " + map.getName());
 		
 		// Center the window
-		this.setSize(800, 800);
+		this.setSize(50*map.getWidth(), 50*map.getHeight());
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
 		Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
