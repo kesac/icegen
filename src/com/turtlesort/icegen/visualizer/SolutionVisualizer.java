@@ -4,10 +4,18 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.Toolkit;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowFocusListener;
+import java.io.File;
+import java.util.LinkedList;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -15,80 +23,195 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 import com.turtlesort.icegen.IceMap;
+import com.turtlesort.icegen.IceMapSolver;
 import com.turtlesort.icegen.NavigationNode;
 
 /**
- * Still experimenting - this is a mess
+ * Draws an IceMap in a JFrame, finds a solution to the map with the least amount of moves, then
+ * animates the sequence of moves in the solution.
  */
-public class SolutionVisualizer extends JFrame{
+@SuppressWarnings("serial")
+public class SolutionVisualizer extends JFrame {
 
-	private static final BasicStroke BASIC_STROKE = new BasicStroke(10);
-	private static final long serialVersionUID = 1L;
+	private static final int REPAINT_DELAY = 100; // Milliseconds; the smaller the number the faster the solution gets painted
+	private static final BasicStroke SOLUTION_LINE = new BasicStroke(10);
 	private static final Color BACKGROUND_COLOR = new Color(200,200,200);
+	private static final Color GLASS_COLOR = new Color(0, 0, 0, 125);
+	private static final Font RELOAD_MESSAGE_FONT = new Font("Arial", Font.PLAIN, 40);
+	private static final String RELOAD_MESSAGE = "Reloading map and resolving...";
 
 	private IceMap map;
+	private File sourceFile;
+	private long sourceLastModified;
+
 	private NavigationNode[] bestSolution;
 	
 	private Timer timer;
 	private TimerTask solutionIterator;
 	private int solutionStep;
 	
-	private JPanel panel;
 	private Container contentPane;
 	private int tileWidth;
 	private int tileHeight;
+	
+	private boolean isReloadingMap;
 
-	public SolutionVisualizer(IceMap map, NavigationNode[] solution) {
+	/**
+	 * Constructor.
+	 * @param file - A Tiled JSON file representing the IceMap to solve and display
+	 */
+	public SolutionVisualizer(File file){
+		this(IceMap.parseTiledFile(file));
+		this.sourceFile = file;
+		this.sourceLastModified = file.lastModified();
+	}
+	
+	/**
+	 * Constructor
+	 * @param map - The IceMap to solve and display
+	 */
+	public SolutionVisualizer(IceMap map) {
 
 		this.map = map;
-		this.bestSolution = solution;
-		this.setTitle("Map: " + map.getName());
 		
-		// Center the window
+		// Get a solution to the given IceMap
+		IceMapSolver solver = new IceMapSolver(map);
+		LinkedList<NavigationNode[]> solutions = solver.solve(25);
+		
+		if(solutions.size() > 0){
+			this.bestSolution = solutions.get(0);
+		}
+
+		this.initWindow();
+		this.initRepaintTimer();
+		
+		this.addKeyListener(new KeyAdapter(){
+			@Override
+			public void keyReleased(KeyEvent e) {
+				if(KeyEvent.VK_R == e.getKeyCode()){
+					reloadMap();
+				}
+			}
+		});
+		
+		this.addWindowFocusListener(new WindowFocusListener(){
+
+			@Override
+			public void windowGainedFocus(WindowEvent arg0) {
+				if(sourceFile.lastModified() > sourceLastModified){
+					reloadMap();
+				}
+			}
+
+			@Override
+			public void windowLostFocus(WindowEvent arg0) {}
+			
+		});
+	}
+	
+	private void reloadMap(){
+		
+		if(!this.isReloadingMap){
+			this.isReloadingMap = true;
+			this.repaint();
+			this.setTitle("Reloading file...");	
+			
+			// We reload in another thread so our file loading and map solving
+			// doesn't block the reloading message painted on the screen.
+			this.timer.schedule(new TimerTask(){
+
+				@Override
+				public void run() {
+					// If we read from a file in the first place and if that file's
+					// last modified time stamp changed, reread the file again
+					if(sourceFile != null && sourceFile.lastModified() > sourceLastModified){
+
+						// Read the file again
+						map = IceMap.parseTiledFile(sourceFile);
+						
+						sourceLastModified = sourceFile.lastModified();
+
+						// Resolve the IceMap
+						IceMapSolver solver = new IceMapSolver(map);
+						LinkedList<NavigationNode[]> solutions = solver.solve(25);
+
+						if(solutions.size() > 0){
+							bestSolution = solutions.get(0);
+						}
+
+						// Reset the dimensions of the window, don't center because user might of moved it somewhere else
+						setSize(50*map.getWidth(), 50*map.getHeight());
+					}
+
+					// Restart the repaint timer
+					initRepaintTimer();
+					
+					setTitle("Map: " + map.getName() + " (Press R to reload file)");
+					isReloadingMap = false;
+				}
+				
+			}, 0);
+			
+		}
+	}
+	
+	private void initWindow(){
+		
+		// Build the window we will display the solution
+		this.setTitle("Map: " + map.getName() + " (Press R to reload file)");
 		this.setSize(50*map.getWidth(), 50*map.getHeight());
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
+		// Center the window
 		Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
 		this.setLocation(screen.width/2 - this.getWidth()/2, screen.height/2 - this.getHeight()/2);
 		
+		
+		// We briefly set the window visible so we can properly extract dimensions
 		this.setVisible(true);
 		
-		@SuppressWarnings("serial")
 		JPanel panel = new JPanel(){
 			public void paintComponent(Graphics g){
+				super.paintComponent(g);
 				draw(g);
 			}
 		};
 		
 		this.add(panel);
-		
-		this.panel = new JPanel();
-		this.contentPane = this.getContentPane();
-		
+
+		this.contentPane = this.getContentPane();		
 		int canvasWidth = contentPane.getWidth();
 		int canvasHeight = contentPane.getHeight();
 
 		this.tileWidth = canvasWidth / map.getWidth();
 		this.tileHeight = canvasHeight / map.getHeight();
 		this.setVisible(false);
-		
+	}
+	
+	private void initRepaintTimer(){
+
 		// Setup a timer task that iterates through the moves of the solution
-		this.timer = new Timer();
+		
+		if(this.timer == null){
+			this.timer = new Timer();
+		}
+		
+		if(this.solutionIterator != null){
+			this.solutionIterator.cancel();
+		}
+		
+		this.solutionStep = 0;
 		this.solutionIterator = new TimerTask(){
 			@Override
 			public void run() {
-				solutionStep++;
 				repaint();
-				if(solutionStep > bestSolution.length){
+				
+				if(solutionStep++ > bestSolution.length){
 					this.cancel();
 				}
-				
 			}
 		};
-		this.timer.schedule(this.solutionIterator, 0, 100);
-		
-		/**/
-
+		this.timer.schedule(this.solutionIterator, 0, REPAINT_DELAY);
 	}
 
 	public void draw(Graphics g) {
@@ -98,9 +221,26 @@ public class SolutionVisualizer extends JFrame{
 
 		this.drawMap(g);
 		this.drawSolution(g);
+		
+		if(this.isReloadingMap){
+			Graphics2D g2d = (Graphics2D)g;
+			g2d.setColor(GLASS_COLOR);
+			g.fillRect(0, 0, this.getWidth(), this.getHeight());
+			
+			FontMetrics metrics = this.getFontMetrics(RELOAD_MESSAGE_FONT);
+			int messageWidth = metrics.stringWidth(RELOAD_MESSAGE);
+			
+			g.setColor(Color.WHITE);
+			g.setFont(RELOAD_MESSAGE_FONT);
+			g.drawString(RELOAD_MESSAGE, this.getWidth()/2 - messageWidth/2, this.getHeight()/2);
+			
+		}
 
 	}
 
+	/**
+	 * Draws each tile of the IceMap.
+	 */
 	private void drawMap(Graphics g){
 
 		for(int x = 0; x < map.getWidth(); x++){
@@ -133,8 +273,9 @@ public class SolutionVisualizer extends JFrame{
 		}
 	}
 
-
-	
+	/**
+	 * Draws a line indicating the solution for the IceMap.
+	 */
 	private void drawSolution(Graphics g){
 	
 		Graphics2D g2d = (Graphics2D) g; 
@@ -146,7 +287,7 @@ public class SolutionVisualizer extends JFrame{
 			// Draw the line from start tile to first move
 			if(i == 0){
 				g.setColor(Color.GRAY);
-                g2d.setStroke(BASIC_STROKE);
+                g2d.setStroke(SOLUTION_LINE);
 				g.drawLine(tileToPixelX(map.getStartX()) + tileWidth/2,
 						tileToPixelY(map.getStartY()) + tileHeight/2,
 						tileToPixelX(move.x) + tileWidth/2, 
@@ -157,7 +298,7 @@ public class SolutionVisualizer extends JFrame{
 			if(i != 0){
 				NavigationNode previousMove = this.bestSolution[i-1];
 				g.setColor(Color.GRAY);
-                g2d.setStroke(BASIC_STROKE);
+                g2d.setStroke(SOLUTION_LINE);
 				g.drawLine(tileToPixelX(previousMove.x) + tileWidth/2,
 						tileToPixelY(previousMove.y) + tileHeight/2,
 						tileToPixelX(move.x) + tileWidth/2, 
@@ -175,11 +316,11 @@ public class SolutionVisualizer extends JFrame{
 	}
 	
 	private int tileToPixelX(int tileX){
-		return (-panel.getWidth()) + (tileX * tileWidth) + tileX;
+		return (tileX * tileWidth) + tileX;
 	}
 	
 	private int tileToPixelY(int tileY){
-		return (-panel.getHeight()) + (tileY * tileHeight)+ tileY;
+		return (tileY * tileHeight)+ tileY;
 	}
 	
 }

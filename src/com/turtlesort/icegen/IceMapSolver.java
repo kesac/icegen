@@ -8,12 +8,14 @@ import java.util.LinkedList;
 import com.turtlesort.icegen.IceMap.Tile;
 
 /**
- * Finds solutions to for an ice map.
+ * Finds solutions for IceMaps. A valid solution is any sequence of moves that would lead a player from the
+ * starting tile to the ending tile.
  */
 public class IceMapSolver {
 
-	private static final int DEFAULT_MOVE_LIMIT = 10;
-	
+	/**
+	 * The only valid directions a player can move on an IceMap.
+	 */
 	public static enum Direction {
 		UP, DOWN, LEFT, RIGHT
 	}
@@ -50,20 +52,6 @@ public class IceMapSolver {
 	 * sequence of moves (up, down, left, right) that will lead from the starting
 	 * tile to the end tile.
 	 * @param moveLimit The maximum number of moves a solution should have.
-	 * @return A linked list of solutions. Each solution is an array of moves represented
-	 * as directions to take. The list is sorted in ascending order according to the number of moves per solution. The
-	 * first solution (at index 0) always has the least moves. If there are no solutions then
-	 * the linked list will be empty.
-	 */
-	public LinkedList<NavigationNode[]> solve(){
-		return this.solve(DEFAULT_MOVE_LIMIT, false);
-	}
-	
-	/**
-	 * Finds a set of solutions that will solve this IceMap. Each solution is a
-	 * sequence of moves (up, down, left, right) that will lead from the starting
-	 * tile to the end tile.
-	 * @param moveLimit The maximum number of moves a solution should have.
 	 * @param trackVisitedTiles If true, solutions that share intermediate tiles
 	 * as other solutions are ignored.
 	 * @return A linked list of solutions. Each solution is an array of moves represented
@@ -74,17 +62,13 @@ public class IceMapSolver {
 	public LinkedList<NavigationNode[]> solve(int moveLimit, boolean trackVisitedTiles){
 		
 		this.visitedTiles = new HashSet<String>();
-		
 		this.trackVisitedTiles = trackVisitedTiles;
 		
 		NavigationTree tree = new NavigationTree(this.map.getStartX(), this.map.getStartY());
 		this.visitedTiles.add(tree.root.x + "," + tree.root.y);
 		this.findSolution(tree.root, null, 0,  moveLimit);
 		
-		//tree.printSolutions();
-		
 		LinkedList<NavigationNode[]> solutions = tree.getSolutions();
-		
 		Collections.sort(solutions, new Comparator<NavigationNode[]>(){
 			@Override
 			public int compare(NavigationNode[] arg0, NavigationNode[] arg1) {
@@ -112,6 +96,9 @@ public class IceMapSolver {
 	/**
 	 * Given a starting position, checks whether it is possible to move either up, down, left, or right
 	 * to a new tile.
+	 * @param x - The x-coordinate of the tile serving as the parent node
+	 * @param y - The y-coordinate of the tile serving as the parent node
+	 * @param lastMove - The direction the player moved last
 	 */
 	private LinkedList<NavigationNode> findChildren(int x, int y, Direction lastMove){
 		
@@ -139,6 +126,9 @@ public class IceMapSolver {
 	 * Given a position on the map, checks whether it is possible to move in Direction <code>d</code> to
 	 * a new tile. If the specified position is the the end tile or if a possible move results in
 	 * a tile that has been traveled to before, null is returned.
+	 * @param x - The x-coordinate of the tile serving as the parent node
+	 * @param y - The y-coordinate of the tile serving as the parent node
+	 * @param d - The direction to move in
 	 */
 	private NavigationNode findChild(int x, int y, Direction d){
 		

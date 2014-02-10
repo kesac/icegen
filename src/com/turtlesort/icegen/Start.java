@@ -1,5 +1,6 @@
 package com.turtlesort.icegen;
 
+import java.io.File;
 import java.util.LinkedList;
 
 import com.turtlesort.icegen.visualizer.SolutionVisualizer;
@@ -8,8 +9,11 @@ import com.turtlesort.icegen.visualizer.TextVisualizer;
 public class Start {
 
 	public static void main(String[] args){
-
-		/*
+		testSolver();
+		testVisualizer();
+	}
+	
+	private static void testSolver(){
 		IceMap map = new IceMap(10,12);
 		map.setStartTile(5, map.getHeight() - 1);
 		map.setTileType(5, map.getHeight() - 1, IceMap.Tile.FLOOR);
@@ -25,11 +29,6 @@ public class Start {
 
 		map.setTileType(0, 4, IceMap.Tile.SOLID);
 		map.setTileType(map.getWidth()-1, 7, IceMap.Tile.SOLID);
-		/**/
-
-		String filePath = "maps/map2.json";
-		IceMap map = IceMap.parseJSONFile(filePath);
-		map.setName(filePath);
 		
 		// map = new IceMapGenerator(15,15,20,20).generate();
 		// map.setName("Randomly Generated");
@@ -39,7 +38,7 @@ public class Start {
 		r.render();
 
 		IceMapSolver s = new IceMapSolver(map);
-		int moveLimit = 25;
+		int moveLimit = 10;
 		
 		LinkedList<NavigationNode[]> solutions = s.solve(moveLimit);
 		
@@ -60,11 +59,12 @@ public class Start {
 		else{
 			System.out.println("No solutions equal to or under " + moveLimit + " moves");
 		}
-
-		SolutionVisualizer visualizer = new SolutionVisualizer(map, solutions.get(0));
-		visualizer.setVisible(true);
-		/**/
 	}
-
+	
+	private static void testVisualizer(){
+		File source = new File("maps/map3.json");
+		SolutionVisualizer visualizer = new SolutionVisualizer(source);
+		visualizer.setVisible(true);
+	}
 
 }

@@ -9,10 +9,16 @@ import org.json.JSONObject;
 import org.json.JSONTokener;
 
 /**
- * An instance of this class represents a grid of tiles. 
+ * An instance of this class represents a tile-based map consisting of three types of tiles:
+ * floor, ice, and solid. Floor and ice tiles can be walked across, and solid tiles cannot.
+ * Stepping on an ice tile keeps you in motion in the direction you stepped until you land on a floor tile
+ * or collide with a solid tile. 
  */
 public class IceMap {
 	
+	/**
+	 * Tile type.
+	 */
 	public static enum Tile {
 		ICE, FLOOR, SOLID
 	};
@@ -45,75 +51,139 @@ public class IceMap {
 		}
 	}
 		
+	/**
+	 * Sets the specified tile as the starting location of a player.
+	 * @param x - x-coordinate of tile
+	 * @param y - y-coordinate of tile
+	 */
 	public void setStartTile(int x, int y){
 		this.startX = x;
 		this.startY = y;
 	}
 	
+	/**
+	 * Sets the specified tile as the location the player must make their way to.
+	 * @param x - x-coordinate of tile
+	 * @param y - y-coordinate of tile
+	 */
 	public void setEndTile(int x, int y){
 		this.endX = x;
 		this.endY = y;
 	}
 	
+	/**
+	 * Sets the tile at the specified coordinates to the given type. Only values in enum IceMap.Tile are valid types.
+	 * @param x - x-coordinate of tile
+	 * @param y - y-coordinate of tile
+	 */
 	public void setTileType(int x, int y, Tile tile){
 		this.map[x][y] = tile;
 	}
 
+	/**
+	 * Sets the name of this map.
+	 * @param name - The desired name for the map
+	 */
 	public void setName(String name){
 		this.mapName = name;
 	}
 	
 	/**
-	 * Note: Out of bounds locations are returned as a solid tile.
+	 * @param x - x-coordinate of tile
+	 * @param y - y-coordinate of tile
+	 * @return The type of the tile at the specified coordinates. Out of bounds locations are returned as a solid tile.
 	 */
 	public Tile getTileType(int x, int y){
 		return isTile(x,y) ? this.map[x][y] : Tile.SOLID;
 	}
 
+	/**
+	 * @return The name of this map 
+	 */
 	public String getName(){
 		return this.mapName;
 	}
 	
+	/**
+	 * @return The x-coordinate of the starting tile
+	 */
 	public int getStartX() {
 		return this.startX;
 	}
 
+	/**
+	 * @return The y-coordinate of the starting tile
+	 */
 	public int getStartY() {
 		return this.startY;
 	}
 
+	/**
+	 * @return The x-coordinate of the tile the player must make their way to
+	 */
 	public int getEndX() {
 		return this.endX;
 	}
 
+	/**
+	 * @return The y-coordinate of the tile the player must make their way to
+	 */
 	public int getEndY() {
 		return this.endY;
 	}
 	
+	/**
+	 * @param x - x-coordinate of the tile to test
+	 * @param y - y-coordinate of the tile to test
+	 * @return True if the specified tile is the starting tile, else false
+	 */
 	public boolean isStart(int x, int y){
 		return x == this.getStartX() && y == this.getStartY();
 	}
 	
+	/**
+	 * @param x - x-coordinate of the tile to test
+	 * @param y - y-coordinate of the tile to test
+	 * @return True if the specified tile is the ending tile, else false
+	 */
 	public boolean isEnd(int x, int y){
 		return x == this.getEndX() && y == this.getEndY();
 	}
 	
+	/**
+	 * @param x - x-coordinate of the tile to test
+	 * @param y - y-coordinate of the tile to test
+	 * @return True if the specified tile is within bounds the bounds of the map. False if the tile is out of bounds.
+	 */
 	public boolean isTile(int x, int y){
 		return x >= 0 && x < this.getWidth() && y >= 0 && y < this.getHeight();
 	}
 	
+	/**
+	 * @return The width of the map (number of columns)
+	 */
 	public int getWidth(){
 		return this.map.length;
 	}
 	
+	/**
+	 * @return The height of the map (number of rows)
+	 */
 	public int getHeight(){
 		return this.map[0].length;
 	}
 	
-	public static IceMap parseJSONFile(String pathToFile){
+	/**
+	 * Creates an IceMap based on a map created in Tiled. The file must be a JSON file to be
+	 * interpreted properly. 
+	 * @param file - A file object representing the file on disk to read
+	 * @return An IceMap that represents the specified file, if the file was a valid Tiled JSON
+	 * map. Otherwise null if the file did not exist or could not be interpreted properly
+	 */
+	public static IceMap parseTiledFile(File file){
 		
 		try {
-			FileReader reader = new FileReader(new File(pathToFile));
+			FileReader reader = new FileReader(file);
 			JSONTokener tokener = new JSONTokener(reader);
 			JSONObject obj = new JSONObject(tokener);
 
@@ -125,6 +195,7 @@ public class IceMap {
 			int height = obj.getInt("height");
 
 			IceMap map = new IceMap(width, height);
+			map.setName(file.getName());
 			
 			for(int i = 0; i < width; i++){
 				for(int j = 0; j < height; j++){
