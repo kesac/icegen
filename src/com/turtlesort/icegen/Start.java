@@ -11,6 +11,9 @@ public class Start {
 	public static void main(String[] args){
 		testSolver();
 		testVisualizer();
+		
+		IceMap.parseTMXFile(new File("maps/map3.tmx"));
+		
 	}
 	
 	private static void testSolver(){

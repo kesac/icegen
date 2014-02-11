@@ -1,12 +1,24 @@
 package com.turtlesort.icegen;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
+import java.util.zip.InflaterInputStream;
+
+import javax.xml.bind.DatatypeConverter;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 /**
  * An instance of this class represents a tile-based map consisting of three types of tiles:
@@ -171,6 +183,56 @@ public class IceMap {
 	 */
 	public int getHeight(){
 		return this.map[0].length;
+	}
+	
+	/**
+	 * The Tiled TMX file needs to be saved in Base64 zlib compressed format
+	 * @param file
+	 * @return
+	 */
+	public static IceMap parseTMXFile(File file){
+		
+		
+		try {
+			DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
+			DocumentBuilder builder = builderFactory.newDocumentBuilder();
+			Document d = builder.parse(file);
+			
+			NodeList list = d.getElementsByTagName("data");
+			
+			for(int i = 0; i < list.getLength(); i++){
+				Node node = list.item(i);
+				System.out.println(node.getNodeName() + " = " + node.getTextContent().trim());
+				byte[] data = DatatypeConverter.parseBase64Binary(node.getTextContent().trim());
+				
+				ByteArrayInputStream iStream = new ByteArrayInputStream(data);
+				InflaterInputStream gStream = new InflaterInputStream(iStream);
+				
+				int count = 0;
+				byte[] buffer = new byte[4];
+				while(gStream.available() > 0){
+					gStream.read(buffer);
+					System.out.println(buffer[0]);
+					count++;
+				}
+				
+				
+				System.out.println("Data length: " + count);
+			}
+			
+			
+		} catch (ParserConfigurationException e) {
+			e.printStackTrace();
+			
+		} catch (SAXException e) {
+			e.printStackTrace();
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		
+		return null;
 	}
 	
 	/**
