@@ -21,7 +21,6 @@ public class IceMapSolver {
 	}
 	
 	private IceMap map;
-	private boolean trackVisitedTiles;
 	private HashSet<String> visitedTiles;
 	
 	/**
@@ -33,20 +32,7 @@ public class IceMapSolver {
 		
 	}
 	
-	/**
-	 * Finds a set of solutions that will solve this IceMap. Each solution is a
-	 * sequence of moves (up, down, left, right) that will lead from the starting
-	 * tile to the end tile.
-	 * @param moveLimit The maximum number of moves a solution should have.
-	 * @return A linked list of solutions. Each solution is an array of moves represented
-	 * as directions to take. The list is sorted in ascending order according to the number of moves per solution. The
-	 * first solution (at index 0) always has the least moves. If there are no solutions then
-	 * the linked list will be empty.
-	 */
-	public LinkedList<NavigationNode[]> solve(int moveLimit){
-		return this.solve(moveLimit, false);
-	}
-	
+
 	/**
 	 * Finds a set of solutions that will solve this IceMap. Each solution is a
 	 * sequence of moves (up, down, left, right) that will lead from the starting
@@ -59,14 +45,13 @@ public class IceMapSolver {
 	 * first solution (at index 0) always has the least moves. If there are no solutions then
 	 * the linked list will be empty.
 	 */
-	public LinkedList<NavigationNode[]> solve(int moveLimit, boolean trackVisitedTiles){
+	public LinkedList<NavigationNode[]> solve(int moveLimit){
 		
 		this.visitedTiles = new HashSet<String>();
-		this.trackVisitedTiles = trackVisitedTiles;
 		
 		NavigationTree tree = new NavigationTree(this.map.getStartX(), this.map.getStartY());
-		this.visitedTiles.add(tree.root.x + "," + tree.root.y);
-		this.findSolution(tree.root, null, 0,  moveLimit);
+		
+		this.findSolution(tree.root, 0,  moveLimit);
 		
 		LinkedList<NavigationNode[]> solutions = tree.getSolutions();
 		Collections.sort(solutions, new Comparator<NavigationNode[]>(){
@@ -82,15 +67,19 @@ public class IceMapSolver {
 	/**
 	 * Depth first search.
 	 */
-	private void findSolution(NavigationNode node, Direction lastMove, int depth, int limit){
+	private void findSolution(NavigationNode node, int depth, int limit){
 		
 		if(++depth > limit) return;
 		
-		node.children = this.findChildren(node.x, node.y, lastMove);
+		node.children = this.findChildren(node.x, node.y);
+		
+		this.visitedTiles.add(node.x + "," + node.y);
 		
 		for(NavigationNode child : node.children){
-			this.findSolution(child, child.direction, depth, limit);
+			this.findSolution(child, depth, limit);
 		}
+		
+		this.visitedTiles.remove(node.x + "," + node.y);
 	}
 	
 	/**
@@ -98,17 +87,14 @@ public class IceMapSolver {
 	 * to a new tile.
 	 * @param x - The x-coordinate of the tile serving as the parent node
 	 * @param y - The y-coordinate of the tile serving as the parent node
-	 * @param lastMove - The direction the player moved last
 	 */
-	private LinkedList<NavigationNode> findChildren(int x, int y, Direction lastMove){
+	private LinkedList<NavigationNode> findChildren(int x, int y){
 		
 		NavigationNode[] possibleNodes = new NavigationNode[Direction.values().length];
 		
 		int i = 0;
 		for(Direction d : Direction.values()){
-			if(!this.isOppositeDirection(lastMove, d)){ // Solution optimization, prevents solutions with left/right or up/down consecutive pairs
-				possibleNodes[i++] = findChild(x, y, d);
-			}
+			possibleNodes[i++] = findChild(x, y, d);
 		}
 		
 		LinkedList<NavigationNode> result = new LinkedList<NavigationNode>();
@@ -178,8 +164,6 @@ public class IceMapSolver {
 			}
 		}
 
-
-		
 		if((newX != x || newY != y) && !this.visitedTiles.contains(newX + "," + newY)){
 		
 			NavigationNode node = new NavigationNode();
@@ -192,26 +176,11 @@ public class IceMapSolver {
 				node.isEnd = true;
 			}
 			
-			// We skip adding the end node to visited tiles so we find multiple solutions
-			else if(this.trackVisitedTiles){
-				
-				this.visitedTiles.add(newX + "," + newY);
-			}
-			
-			
 			return node;
 		}
 		
 		return null;
 		
 	}
-	
-	private boolean isOppositeDirection(Direction d1, Direction d2){
-		return (d1 == Direction.UP && d2 == Direction.DOWN)
-				|| (d1 == Direction.DOWN && d2 == Direction.UP)
-				|| (d1 == Direction.LEFT && d2 == Direction.RIGHT)
-				|| (d1 == Direction.RIGHT && d2 == Direction.LEFT);
-	}
-
 	
 }

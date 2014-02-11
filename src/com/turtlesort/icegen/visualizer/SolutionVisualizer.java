@@ -37,8 +37,9 @@ public class SolutionVisualizer extends JFrame {
 	private static final BasicStroke SOLUTION_LINE = new BasicStroke(10);
 	private static final Color BACKGROUND_COLOR = new Color(200,200,200);
 	private static final Color GLASS_COLOR = new Color(0, 0, 0, 125);
-	private static final Font RELOAD_MESSAGE_FONT = new Font("Arial", Font.PLAIN, 40);
+	private static final Font MESSAGE_FONT = new Font("Arial", Font.PLAIN, 40);
 	private static final String RELOAD_MESSAGE = "Reloading map and resolving...";
+	private static final String UNSOLVABLE_MESSAGE = "No solution exists!";
 
 	private IceMap map;
 	private File sourceFile;
@@ -138,6 +139,9 @@ public class SolutionVisualizer extends JFrame {
 						if(solutions.size() > 0){
 							bestSolution = solutions.get(0);
 						}
+						else{
+							bestSolution = null;
+						}
 
 						// Reset the dimensions of the window, don't center because user might of moved it somewhere else
 						setSize(50*map.getWidth(), 50*map.getHeight());
@@ -206,7 +210,7 @@ public class SolutionVisualizer extends JFrame {
 			public void run() {
 				repaint();
 				
-				if(solutionStep++ > bestSolution.length){
+				if(bestSolution != null && solutionStep++ > bestSolution.length){
 					this.cancel();
 				}
 			}
@@ -227,12 +231,25 @@ public class SolutionVisualizer extends JFrame {
 			g2d.setColor(GLASS_COLOR);
 			g.fillRect(0, 0, this.getWidth(), this.getHeight());
 			
-			FontMetrics metrics = this.getFontMetrics(RELOAD_MESSAGE_FONT);
+			FontMetrics metrics = this.getFontMetrics(MESSAGE_FONT);
 			int messageWidth = metrics.stringWidth(RELOAD_MESSAGE);
 			
 			g.setColor(Color.WHITE);
-			g.setFont(RELOAD_MESSAGE_FONT);
+			g.setFont(MESSAGE_FONT);
 			g.drawString(RELOAD_MESSAGE, this.getWidth()/2 - messageWidth/2, this.getHeight()/2);
+			
+		}
+		else if(this.bestSolution == null){
+			Graphics2D g2d = (Graphics2D)g;
+			g2d.setColor(GLASS_COLOR);
+			g.fillRect(0, 0, this.getWidth(), this.getHeight());
+			
+			FontMetrics metrics = this.getFontMetrics(MESSAGE_FONT);
+			int messageWidth = metrics.stringWidth(UNSOLVABLE_MESSAGE);
+			
+			g.setColor(Color.WHITE);
+			g.setFont(MESSAGE_FONT);
+			g.drawString(UNSOLVABLE_MESSAGE, this.getWidth()/2 - messageWidth/2, this.getHeight()/2);
 			
 		}
 
@@ -278,6 +295,8 @@ public class SolutionVisualizer extends JFrame {
 	 */
 	private void drawSolution(Graphics g){
 	
+		if(bestSolution == null) return;
+		
 		Graphics2D g2d = (Graphics2D) g; 
 		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		
