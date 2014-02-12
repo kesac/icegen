@@ -3,9 +3,14 @@
  <tileset firstgid="1" name="icemaptileset" tilewidth="32" tileheight="32">
   <image source="icemaptileset.png" width="128" height="64"/>
  </tileset>
- <layer name="Tile Layer 1" width="15" height="15">
+ <layer name="Solution Layer" width="15" height="15">
   <data encoding="base64" compression="zlib">
-   eJxjZWBgYMWBWfDIwTAjGgaJMSFhXGqorZcRSRyfPkJ6cWFi9JMjRwhTaicx/iJVP0yMiQx3MVGgF1/80ipdkaIXF2YmIA8A22UCKg==
+   eJxjZWBgYMWBWfDIwTAjGgaJMSFhXGqwiTMiieOTxyWHbgY5evHpI+RmQvqprZdYd1Pbv4TcjU0vsf7Hl66IUUNILy63UCM948LMBOQBnoUCEQ==
+  </data>
+ </layer>
+ <layer name="Tile Layer 2" width="15" height="15">
+  <data encoding="base64" compression="zlib">
+   eJxjYBgFo2AUDCQAAAOEAAE=
   </data>
  </layer>
 </map>
