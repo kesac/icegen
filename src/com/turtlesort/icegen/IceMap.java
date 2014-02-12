@@ -2,9 +2,9 @@ package com.turtlesort.icegen;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
+import java.text.NumberFormat;
+import java.text.ParseException;
 import java.util.zip.InflaterInputStream;
 
 import javax.xml.bind.DatatypeConverter;
@@ -12,10 +12,9 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.json.JSONTokener;
+import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
@@ -186,38 +185,84 @@ public class IceMap {
 	}
 	
 	/**
-	 * The Tiled TMX file needs to be saved in Base64 zlib compressed format
-	 * @param file
-	 * @return
+	 * Parses a Tiled TMX file (needs to be saved in Base64 zlib compressed format) and returns an IceMap
+	 * representing it.
+	 * @param file - The file to parse
+	 * @return An IceMap representing the map described in the TMX file.
 	 */
 	public static IceMap parseTMXFile(File file){
 		
+		IceMap map = null;
 		
 		try {
+			
 			DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
 			DocumentBuilder builder = builderFactory.newDocumentBuilder();
-			Document d = builder.parse(file);
+			Document document = builder.parse(file);
 			
-			NodeList list = d.getElementsByTagName("data");
-			
-			for(int i = 0; i < list.getLength(); i++){
-				Node node = list.item(i);
-				System.out.println(node.getNodeName() + " = " + node.getTextContent().trim());
-				byte[] data = DatatypeConverter.parseBase64Binary(node.getTextContent().trim());
-				
-				ByteArrayInputStream iStream = new ByteArrayInputStream(data);
-				InflaterInputStream gStream = new InflaterInputStream(iStream);
-				
-				int count = 0;
-				byte[] buffer = new byte[4];
-				while(gStream.available() > 0){
-					gStream.read(buffer);
-					System.out.println(buffer[0]);
-					count++;
+			// Attempt extraction of map dimensions
+			NodeList layerNodeList = document.getElementsByTagName("layer");
+			Node layerNode = layerNodeList.item(0);
+
+			if(layerNode!= null){
+
+				NumberFormat numberFormat = NumberFormat.getIntegerInstance();
+				numberFormat.setParseIntegerOnly(true);
+
+				NamedNodeMap attributes = layerNode.getAttributes();
+
+				int mapWidth = numberFormat.parse(attributes.getNamedItem("width").getNodeValue()).intValue();
+				int mapHeight = numberFormat.parse(attributes.getNamedItem("height").getNodeValue()).intValue();
+
+				map = new IceMap(mapWidth, mapHeight);
+				map.setName(file.getName());
+
+			}
+
+			// Deconstruct the data string and translate it into tile types
+			if(map != null){
+
+				NodeList dataNodeList = document.getElementsByTagName("data");
+				Node dataNode = dataNodeList.item(0);
+
+				if(dataNode != null){
+
+					byte[] compressedData = DatatypeConverter.parseBase64Binary(dataNode.getTextContent().trim());
+
+					ByteArrayInputStream iStream = new ByteArrayInputStream(compressedData);
+					InflaterInputStream gStream = new InflaterInputStream(iStream);
+
+					int index = 0;
+					byte[] buffer = new byte[4];
+					while(gStream.available() > 0){
+						gStream.read(buffer);
+						
+						if(index >= map.getWidth()*map.getHeight()){
+							break;
+						}
+						
+						int row = index/map.getWidth();
+						int col = index % map.getWidth();
+						
+						if(buffer[0] == 1){
+							map.setTileType(col, row, IceMap.Tile.ICE);
+						}
+						else if(buffer[0] == 2){
+							map.setTileType(col, row, IceMap.Tile.FLOOR);
+						}
+						else if(buffer[0] == 3){
+							map.setStartTile(col, row);
+						}
+						else if(buffer[0] == 4){
+							map.setEndTile(col, row);
+						}
+						else if(buffer[0] == 5){
+							map.setTileType(col, row, IceMap.Tile.SOLID);
+						}
+						
+						index++;
+					}
 				}
-				
-				
-				System.out.println("Data length: " + count);
 			}
 			
 			
@@ -229,10 +274,16 @@ public class IceMap {
 			
 		} catch (IOException e) {
 			e.printStackTrace();
+			
+		} catch (DOMException e) {
+			e.printStackTrace();
+			
+		} catch (ParseException e) {
+			e.printStackTrace();
 		}
 		
 		
-		return null;
+		return map;
 	}
 	
 	/**
@@ -241,7 +292,7 @@ public class IceMap {
 	 * @param file - A file object representing the file on disk to read
 	 * @return An IceMap that represents the specified file, if the file was a valid Tiled JSON
 	 * map. Otherwise null if the file did not exist or could not be interpreted properly
-	 */
+	 *//*
 	public static IceMap parseTiledFile(File file){
 		
 		try {
@@ -291,8 +342,6 @@ public class IceMap {
 			return null;
 		}
 
-		
-
-	}
+	}/**/
 	
 }

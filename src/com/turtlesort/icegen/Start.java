@@ -11,9 +11,6 @@ public class Start {
 	public static void main(String[] args){
 		testSolver();
 		testVisualizer();
-		
-		IceMap.parseTMXFile(new File("maps/map3.tmx"));
-		
 	}
 	
 	private static void testSolver(){
@@ -65,7 +62,7 @@ public class Start {
 	}
 	
 	private static void testVisualizer(){
-		File source = new File("maps/map3.json");
+		File source = new File("maps/map3.tmx");
 		SolutionVisualizer visualizer = new SolutionVisualizer(source);
 		visualizer.setVisible(true);
 	}

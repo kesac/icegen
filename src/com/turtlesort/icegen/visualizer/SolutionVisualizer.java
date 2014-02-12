@@ -62,7 +62,7 @@ public class SolutionVisualizer extends JFrame {
 	 * @param file - A Tiled JSON file representing the IceMap to solve and display
 	 */
 	public SolutionVisualizer(File file){
-		this(IceMap.parseTiledFile(file));
+		this(IceMap.parseTMXFile(file));
 		this.sourceFile = file;
 		this.sourceLastModified = file.lastModified();
 	}
@@ -128,7 +128,7 @@ public class SolutionVisualizer extends JFrame {
 					if(sourceFile != null && sourceFile.lastModified() > sourceLastModified){
 
 						// Read the file again
-						map = IceMap.parseTiledFile(sourceFile);
+						map = IceMap.parseTMXFile(sourceFile);
 						
 						sourceLastModified = sourceFile.lastModified();
 
