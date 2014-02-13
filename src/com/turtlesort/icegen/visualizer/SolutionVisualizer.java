@@ -23,6 +23,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 import com.turtlesort.icegen.IceMap;
+import com.turtlesort.icegen.IceMapGenerator;
 import com.turtlesort.icegen.IceMapSolver;
 import com.turtlesort.icegen.NavigationNode;
 
@@ -44,6 +45,7 @@ public class SolutionVisualizer extends JFrame {
 	private IceMap map;
 	private File sourceFile;
 	private long sourceLastModified;
+	private IceMapGenerator generator;
 
 	private NavigationNode[] bestSolution;
 	
@@ -58,7 +60,14 @@ public class SolutionVisualizer extends JFrame {
 	private boolean isReloadingMap;
 
 	/**
-	 * Constructor.
+	 * @param generator - An IceMapGenerator that will create IceMaps to display.
+	 */
+	public SolutionVisualizer(IceMapGenerator generator){
+		this(generator.generate());
+		this.generator = generator;
+	}
+	
+	/**
 	 * @param file - A Tiled JSON file representing the IceMap to solve and display
 	 */
 	public SolutionVisualizer(File file){
@@ -68,7 +77,6 @@ public class SolutionVisualizer extends JFrame {
 	}
 	
 	/**
-	 * Constructor
 	 * @param map - The IceMap to solve and display
 	 */
 	public SolutionVisualizer(IceMap map) {
@@ -99,7 +107,7 @@ public class SolutionVisualizer extends JFrame {
 
 			@Override
 			public void windowGainedFocus(WindowEvent arg0) {
-				if(sourceFile.lastModified() > sourceLastModified){
+				if(sourceFile != null && sourceFile.lastModified() > sourceLastModified){
 					reloadMap();
 				}
 			}
@@ -123,15 +131,22 @@ public class SolutionVisualizer extends JFrame {
 
 				@Override
 				public void run() {
+					
+					IceMap oldMap = map;
+					
 					// If we read from a file in the first place and if that file's
 					// last modified time stamp changed, reread the file again
 					if(sourceFile != null && sourceFile.lastModified() > sourceLastModified){
-
 						// Read the file again
 						map = IceMap.parseTMXFile(sourceFile);
-						
 						sourceLastModified = sourceFile.lastModified();
+					}
+					else if(generator != null){
+						map = generator.generate();
+					}
 
+					if(oldMap != map){
+						
 						// Resolve the IceMap
 						IceMapSolver solver = new IceMapSolver(map);
 						LinkedList<NavigationNode[]> solutions = solver.solve(25);
@@ -146,7 +161,7 @@ public class SolutionVisualizer extends JFrame {
 						// Reset the dimensions of the window, don't center because user might of moved it somewhere else
 						setSize(50*map.getWidth(), 50*map.getHeight());
 					}
-
+					
 					// Restart the repaint timer
 					initRepaintTimer();
 					

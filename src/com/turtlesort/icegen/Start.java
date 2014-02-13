@@ -9,8 +9,9 @@ import com.turtlesort.icegen.visualizer.TextVisualizer;
 public class Start {
 
 	public static void main(String[] args){
-		testSolver();
-		testVisualizer();
+		//testSolver();
+		//testVisualizer();
+		testGenerator();
 	}
 	
 	private static void testSolver(){
@@ -67,4 +68,11 @@ public class Start {
 		visualizer.setVisible(true);
 	}
 
+	private static void testGenerator(){
+		
+		IceMapGenerator gen = new BasicMapGenerator(10,10,15,15);
+		SolutionVisualizer vis = new SolutionVisualizer(gen);
+		vis.setVisible(true);
+	}
+	
 }
