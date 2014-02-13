@@ -2,10 +2,36 @@ package com.turtlesort.icegen;
 
 import java.util.LinkedList;
 
+/**
+ * <p>
+ * A NavigationTree is used internally by IceMapSolver to describe sequences of player moves on an IceMap.
+ * The root node represents the starting tile of the map. Each subsequent child node of the tree
+ * represents a move in one of four directions: up, down, left, or right. Each node in the tree also
+ * stores the map coordinates the player will arrive at when executing the move.
+ * </p>
+ * <p>
+ * Properties of a NavigationTree to be aware of:
+ * <ul>
+	 * <li>
+		 * The depth of any node represents the number of moves the player needs to make to reach
+		 * that specific tile.
+	 * </li>
+	 * <li>
+		 * IceMapSolver avoids sequences of player moves that contain cycles. Thus, any path from
+		 * the root to any leaf describes a sequence that visits a unique set of map tiles. 
+	 * </li>
+ * </ul>
+ *</p>
+ */
 public class NavigationTree {
 
-	public NavigationNode root;
+	private NavigationNode root;
 	
+	/**
+	 * Constructor.
+	 * @param x - x-coordinate of the root node (should be x-coordinate of starting tile)
+	 * @param y - y-coordinate of the root node (should be y-coordinate of starting tile)
+	 */
 	public NavigationTree(int x, int y){
 		this.root = new NavigationNode();
 		this.root.x = x;
@@ -13,6 +39,21 @@ public class NavigationTree {
 		this.root.direction = null;
 	}
 	
+	/**
+	 * @return The root node of this NavigationTree
+	 */
+	public NavigationNode getRoot(){
+		return this.root;
+	}
+	
+	/**
+	 * @return A LinkedList of NavigationNode arrays. Each array is ordered and is a path from
+	 * the root to a leaf in the tree whose destination is the ending tile of the map.
+	 * 
+	 * This makes each array effectively a set of moves that a player can start executing
+	 * from the starting tile to arrive at the ending tile of an IceMap if index 0
+	 * is skipped.
+	 */
 	public LinkedList<NavigationNode[]> getSolutions(){
 		LinkedList<NavigationNode[]> solutions = new LinkedList<NavigationNode[]>();
 		
@@ -24,7 +65,6 @@ public class NavigationTree {
 	private void getSolutionRecursive(LinkedList<NavigationNode[]> solutions, LinkedList<NavigationNode> stack, NavigationNode node){
 		
 		if(node.direction != null){
-			//stack.addLast(node.direction);
 			stack.addLast(node);
 		}
 		
@@ -47,28 +87,6 @@ public class NavigationTree {
 		
 		if(node.direction != null){
 			stack.removeLast();
-		}
-	}
-	
-	
-	public void printSolutions(){
-		this.printSolutionRescursive("", root);
-	}
-	
-	private void printSolutionRescursive(String prefix, NavigationNode node){
-		if(node.children.size() == 0){
-			if(node.isEnd){
-				System.out.println(prefix + node.toString() + "[SOLVED]");	
-			}
-			else{
-				//System.out.println(prefix + node.toString());
-			}
-			
-		}
-		else{
-			for(NavigationNode child : node.children){
-				printSolutionRescursive(prefix + node.toString(), child);	
-			}
 		}
 	}
 	

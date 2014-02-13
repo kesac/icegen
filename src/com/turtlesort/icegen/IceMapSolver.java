@@ -51,7 +51,7 @@ public class IceMapSolver {
 		
 		NavigationTree tree = new NavigationTree(this.map.getStartX(), this.map.getStartY());
 		
-		this.findSolution(tree.root, 0,  moveLimit);
+		this.findSolution(tree.getRoot(), 0,  moveLimit);
 		
 		LinkedList<NavigationNode[]> solutions = tree.getSolutions();
 		Collections.sort(solutions, new Comparator<NavigationNode[]>(){
