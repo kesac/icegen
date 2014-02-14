@@ -3,6 +3,7 @@ package com.turtlesort.icegen;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 
 import com.turtlesort.icegen.IceMap.Tile;
@@ -71,15 +72,20 @@ public class IceMapSolver {
 		
 		if(++depth > limit) return;
 		
-		node.children = this.findChildren(node.x, node.y);
-		
-		this.visitedTiles.add(node.x + "," + node.y);
-		
-		for(NavigationNode child : node.children){
-			this.findSolution(child, depth, limit);
+		for(NavigationNode child : this.findChildren(node.getDestinationX(), node.getDestinationY())){
+			node.addChild(child);
 		}
 		
-		this.visitedTiles.remove(node.x + "," + node.y);
+		String nodeString = node.getDestinationX() + "," + node.getDestinationY();
+		this.visitedTiles.add(nodeString);
+		
+		Iterator<NavigationNode> i = node.getChildren();
+		
+		while(i.hasNext()){
+			this.findSolution(i.next(), depth, limit);
+		}
+		
+		this.visitedTiles.remove(nodeString);
 	}
 	
 	/**
@@ -167,13 +173,12 @@ public class IceMapSolver {
 		if((newX != x || newY != y) && !this.visitedTiles.contains(newX + "," + newY)){
 		
 			NavigationNode node = new NavigationNode();
-			node.x = newX;
-			node.y = newY;
-			node.direction = d;
+			node.setDestinationCoordinates(newX, newY);
+			node.setDirection(d);
 			
 			
 			if(this.map.isEnd(newX, newY)){
-				node.isEnd = true;
+				node.markAsEnd(true);
 			}
 			
 			return node;

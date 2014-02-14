@@ -51,7 +51,7 @@ public class Start {
 					System.out.print("(S)" + solution.length);
 					
 					for(NavigationNode d : solution){
-						System.out.print(" -> " + d.direction.toString().charAt(0));
+						System.out.print(" -> " + d.getDirection().toString().charAt(0));
 					}
 					System.out.println();
 					
@@ -70,7 +70,8 @@ public class Start {
 
 	private static void testGenerator(){
 		
-		IceMapGenerator gen = new BasicMapGenerator(10,10,15,15);
+		//IceMapGenerator gen = new BasicMapGenerator(10,10,15,15);
+		IceMapGenerator gen = new ExperimentalMapGenerator();
 		SolutionVisualizer vis = new SolutionVisualizer(gen);
 		vis.setVisible(true);
 	}

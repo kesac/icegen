@@ -10,11 +10,11 @@ import com.turtlesort.icegen.IceMapSolver.Direction;
  */
 public class NavigationNode {
 
-	public int x;
-	public int y;
-	public Direction direction;
-	public boolean isEnd;
-	public LinkedList<NavigationNode> children;
+	private int x;
+	private int y;
+	private Direction direction;
+	private boolean isEnd;
+	private LinkedList<NavigationNode> children;
 	
 	/**
 	 * Constructor.
@@ -30,6 +30,14 @@ public class NavigationNode {
 		return children.iterator();
 	}
 
+	public void addChild(NavigationNode child){
+		this.children.add(child);
+	}
+	
+	public int totalChildren(){
+		return this.children.size();
+	}
+	
 	/**
 	 * Sets the coordinates of the tile the player will arrive at
 	 * if they move in this node's direction.

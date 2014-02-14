@@ -39,6 +39,7 @@ public class SolutionVisualizer extends JFrame {
 	private static final Color BACKGROUND_COLOR = new Color(200,200,200);
 	private static final Color GLASS_COLOR = new Color(0, 0, 0, 125);
 	private static final Font MESSAGE_FONT = new Font("Arial", Font.PLAIN, 40);
+	private static final Font INFO_FONT = new Font("Arial", Font.PLAIN, 20);
 	private static final String RELOAD_MESSAGE = "Reloading map and resolving...";
 	private static final String UNSOLVABLE_MESSAGE = "No solution exists!";
 
@@ -48,6 +49,7 @@ public class SolutionVisualizer extends JFrame {
 	private IceMapGenerator generator;
 
 	private NavigationNode[] bestSolution;
+	private int numberOfOtherSolutions;
 	
 	private Timer timer;
 	private TimerTask solutionIterator;
@@ -89,6 +91,7 @@ public class SolutionVisualizer extends JFrame {
 		
 		if(solutions.size() > 0){
 			this.bestSolution = solutions.get(0);
+			this.numberOfOtherSolutions = solutions.size() - 1;
 		}
 
 		this.initWindow();
@@ -153,9 +156,11 @@ public class SolutionVisualizer extends JFrame {
 
 						if(solutions.size() > 0){
 							bestSolution = solutions.get(0);
+							numberOfOtherSolutions = solutions.size() - 1;
 						}
 						else{
 							bestSolution = null;
+							numberOfOtherSolutions = 0;
 						}
 
 						// Reset the dimensions of the window, don't center because user might of moved it somewhere else
@@ -241,6 +246,10 @@ public class SolutionVisualizer extends JFrame {
 		this.drawMap(g);
 		this.drawSolution(g);
 		
+		g.setColor(Color.YELLOW);
+		g.setFont(INFO_FONT);
+		g.drawString("Number of other solutions: " + this.numberOfOtherSolutions, 25, 25);
+		
 		if(this.isReloadingMap){
 			Graphics2D g2d = (Graphics2D)g;
 			g2d.setColor(GLASS_COLOR);
@@ -324,8 +333,8 @@ public class SolutionVisualizer extends JFrame {
                 g2d.setStroke(SOLUTION_LINE);
 				g.drawLine(tileToPixelX(map.getStartX()) + tileWidth/2,
 						tileToPixelY(map.getStartY()) + tileHeight/2,
-						tileToPixelX(move.x) + tileWidth/2, 
-						tileToPixelY(move.y) + tileHeight/2);
+						tileToPixelX(move.getDestinationX()) + tileWidth/2, 
+						tileToPixelY(move.getDestinationY()) + tileHeight/2);
 			}
 			
 			// Keep drawing lines between moves
@@ -333,16 +342,16 @@ public class SolutionVisualizer extends JFrame {
 				NavigationNode previousMove = this.bestSolution[i-1];
 				g.setColor(Color.GRAY);
                 g2d.setStroke(SOLUTION_LINE);
-				g.drawLine(tileToPixelX(previousMove.x) + tileWidth/2,
-						tileToPixelY(previousMove.y) + tileHeight/2,
-						tileToPixelX(move.x) + tileWidth/2, 
-						tileToPixelY(move.y) + tileHeight/2);
+				g.drawLine(tileToPixelX(previousMove.getDestinationX()) + tileWidth/2,
+						tileToPixelY(previousMove.getDestinationY()) + tileHeight/2,
+						tileToPixelX(move.getDestinationX()) + tileWidth/2, 
+						tileToPixelY(move.getDestinationY()) + tileHeight/2);
 			}
 			
 			// Draw the "head" of the line
 			if(i == solutionStep - 1){
 				g.setColor(Color.DARK_GRAY);
-				g.fillOval(tileToPixelX(move.x) + 3, tileToPixelY(move.y) + 3, tileWidth - 6, tileHeight - 6);
+				g.fillOval(tileToPixelX(move.getDestinationX()) + 3, tileToPixelY(move.getDestinationY()) + 3, tileWidth - 6, tileHeight - 6);
 			}
 			
 		}
