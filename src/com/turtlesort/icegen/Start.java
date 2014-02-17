@@ -3,6 +3,7 @@ package com.turtlesort.icegen;
 import java.io.File;
 import java.util.LinkedList;
 
+import com.turtlesort.icegen.visualizer.InteractiveVisualizer;
 import com.turtlesort.icegen.visualizer.SolutionVisualizer;
 import com.turtlesort.icegen.visualizer.TextVisualizer;
 
@@ -70,9 +71,14 @@ public class Start {
 
 	private static void testGenerator(){
 		
+		IceMap map = new IceMap(15,15);
+		map.setStartTile(14, 14);
+		map.setEndTile(0, 0);
+		
 		//IceMapGenerator gen = new BasicMapGenerator(10,10,15,15);
-		IceMapGenerator gen = new ExperimentalMapGenerator();
-		SolutionVisualizer vis = new SolutionVisualizer(gen);
+		//IceMapGenerator gen = new ExperimentalMapGenerator();
+		//SolutionVisualizer vis = new SolutionVisualizer(gen);
+		InteractiveVisualizer vis = new InteractiveVisualizer(map);
 		vis.setVisible(true);
 	}
 	

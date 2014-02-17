@@ -43,22 +43,23 @@ public class SolutionVisualizer extends JFrame {
 	private static final String RELOAD_MESSAGE = "Reloading map and resolving...";
 	private static final String UNSOLVABLE_MESSAGE = "No solution exists!";
 
-	private IceMap map;
+	protected IceMap map;
+	protected JPanel canvas;
+	protected int tileWidth;
+	protected int tileHeight;
+	
 	private File sourceFile;
 	private long sourceLastModified;
 	private IceMapGenerator generator;
 
 	private NavigationNode[] bestSolution;
-	private int numberOfOtherSolutions;
+	private LinkedList<NavigationNode[]> allSolutions;
 	
 	private Timer timer;
 	private TimerTask solutionIterator;
 	private int solutionStep;
 	
 	private Container contentPane;
-	private int tileWidth;
-	private int tileHeight;
-	
 	private boolean isReloadingMap;
 
 	/**
@@ -91,7 +92,7 @@ public class SolutionVisualizer extends JFrame {
 		
 		if(solutions.size() > 0){
 			this.bestSolution = solutions.get(0);
-			this.numberOfOtherSolutions = solutions.size() - 1;
+			this.allSolutions = solutions;
 		}
 
 		this.initWindow();
@@ -121,6 +122,7 @@ public class SolutionVisualizer extends JFrame {
 		});
 	}
 	
+
 	private void reloadMap(){
 		
 		if(!this.isReloadingMap){
@@ -148,7 +150,7 @@ public class SolutionVisualizer extends JFrame {
 						map = generator.generate();
 					}
 
-					if(oldMap != map){
+					if(oldMap != map || (sourceFile == null && generator == null)){
 						
 						// Resolve the IceMap
 						IceMapSolver solver = new IceMapSolver(map);
@@ -156,11 +158,11 @@ public class SolutionVisualizer extends JFrame {
 
 						if(solutions.size() > 0){
 							bestSolution = solutions.get(0);
-							numberOfOtherSolutions = solutions.size() - 1;
+							allSolutions = solutions;
 						}
 						else{
 							bestSolution = null;
-							numberOfOtherSolutions = 0;
+							allSolutions = null;
 						}
 
 						// Reset the dimensions of the window, don't center because user might of moved it somewhere else
@@ -194,14 +196,14 @@ public class SolutionVisualizer extends JFrame {
 		// We briefly set the window visible so we can properly extract dimensions
 		this.setVisible(true);
 		
-		JPanel panel = new JPanel(){
+		this.canvas = new JPanel(){
 			public void paintComponent(Graphics g){
 				super.paintComponent(g);
 				draw(g);
 			}
 		};
 		
-		this.add(panel);
+		this.add(this.canvas);
 
 		this.contentPane = this.getContentPane();		
 		int canvasWidth = contentPane.getWidth();
@@ -248,7 +250,10 @@ public class SolutionVisualizer extends JFrame {
 		
 		g.setColor(Color.YELLOW);
 		g.setFont(INFO_FONT);
-		g.drawString("Number of other solutions: " + this.numberOfOtherSolutions, 25, 25);
+		
+		if(allSolutions != null){
+			g.drawString("Number of other solutions: " + (allSolutions.size() - 1), 25, 25);
+		}
 		
 		if(this.isReloadingMap){
 			Graphics2D g2d = (Graphics2D)g;

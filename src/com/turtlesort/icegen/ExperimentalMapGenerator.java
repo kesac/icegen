@@ -52,12 +52,14 @@ public class ExperimentalMapGenerator implements IceMapGenerator {
 						int x = (a.getDestinationX() + b.getDestinationX())/2;
 						int y = (a.getDestinationY() + b.getDestinationY())/2;
 
+						/*
 						if(x == a.getDestinationX()){
 							x += r.nextInt(3) - 1;
 						}
 						else{
 							y += r.nextInt(3) - 1;
 						}
+						*/	
 						
 						map.setTileType(x, y, IceMap.Tile.SOLID);
 						
