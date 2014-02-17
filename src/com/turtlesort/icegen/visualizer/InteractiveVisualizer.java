@@ -1,8 +1,10 @@
 package com.turtlesort.icegen.visualizer;
 
 
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 
 import com.turtlesort.icegen.IceMap;
 
@@ -18,31 +20,7 @@ public class InteractiveVisualizer extends SolutionVisualizer{
 		super(map);
 		
 		final IceMap iceMap = map;
-		canvas.addMouseListener(new MouseListener(){
-
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
-
-			@Override
-			public void mouseEntered(MouseEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
-
-			@Override
-			public void mouseExited(MouseEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
-
-			@Override
-			public void mousePressed(MouseEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
+		canvas.addMouseListener(new MouseAdapter(){
 
 			@Override
 			public void mouseReleased(MouseEvent e) {
@@ -79,14 +57,34 @@ public class InteractiveVisualizer extends SolutionVisualizer{
 						iceMap.setTileType(tileX, tileY, IceMap.Tile.ICE);
 					}
 					
-					
 					repaint();
 					
 				}
 			}
 			
 		});
-		
+
+		this.addKeyListener(new KeyAdapter(){
+
+
+			@Override
+			public void keyReleased(KeyEvent e) {
+				
+				if(e.getKeyChar() == '='){
+					if(displayedSolution + 1 < allSolutions.size()){
+						displayedSolution++;
+						restartRepaintTimer();
+					}
+				}
+				else if(e.getKeyChar() == '-'){
+					if(displayedSolution - 1 >= 0){
+						displayedSolution--;
+						restartRepaintTimer();
+					}
+				}
+			}
+			
+		});
 	}
 
 

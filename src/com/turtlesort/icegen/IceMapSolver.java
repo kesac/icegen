@@ -33,20 +33,33 @@ public class IceMapSolver {
 		
 	}
 	
-
 	/**
 	 * Finds a set of solutions that will solve this IceMap. Each solution is a
 	 * sequence of moves (up, down, left, right) that will lead from the starting
 	 * tile to the end tile.
 	 * @param moveLimit The maximum number of moves a solution should have.
-	 * @param trackVisitedTiles If true, solutions that share intermediate tiles
-	 * as other solutions are ignored.
 	 * @return A linked list of solutions. Each solution is an array of moves represented
 	 * as directions to take. The list is sorted in ascending order according to the number of moves per solution. The
 	 * first solution (at index 0) always has the least moves. If there are no solutions then
 	 * the linked list will be empty.
 	 */
 	public LinkedList<NavigationNode[]> solve(int moveLimit){
+		return this.solve(moveLimit, false);
+	}
+
+	/**
+	 * Finds a set of solutions that will solve this IceMap. Each solution is a
+	 * sequence of moves (up, down, left, right) that will lead from the starting
+	 * tile to the end tile.
+	 * @param moveLimit The maximum number of moves a solution should have.
+	 * @param pruneSolutionSet If true, compares the optimal solution with all other solutions discovered and removes
+	 * solutions whose ending sequence is identical to the ending sequence (last half) of the optimal solution. This is false by default.
+	 * @return A linked list of solutions. Each solution is an array of moves represented
+	 * as directions to take. The list is sorted in ascending order according to the number of moves per solution. The
+	 * first solution (at index 0) always has the least moves. If there are no solutions then
+	 * the linked list will be empty.
+	 */
+	public LinkedList<NavigationNode[]> solve(int moveLimit, boolean pruneSolutionSet){
 		
 		this.visitedTiles = new HashSet<String>();
 		
@@ -61,6 +74,30 @@ public class IceMapSolver {
 				return arg0.length - arg1.length;
 			}
 		});
+		
+		if(pruneSolutionSet && solutions.size() > 1){
+			
+			NavigationNode[] optimal = solutions.get(0);
+			
+			// Solutions that appear later in the linked list are guaranteed 
+			// to have equal or more moves than the optimal solution
+			for(int i = solutions.size() - 1; i > 0; i--){
+				
+				boolean match = true;
+				
+				NavigationNode[] target = solutions.get(i);
+				for(int j = 1; j <= optimal.length/2; j++){
+					if(!target[target.length - j].equals(optimal[optimal.length - j])){
+						match = false;
+						break;
+					}
+				}
+				
+				if(match){
+					solutions.remove(i);
+				}
+			}
+		}
 		
 		return solutions;
 	}

@@ -39,10 +39,11 @@ public class SolutionVisualizer extends JFrame {
 	private static final Color BACKGROUND_COLOR = new Color(200,200,200);
 	private static final Color GLASS_COLOR = new Color(0, 0, 0, 125);
 	private static final Font MESSAGE_FONT = new Font("Arial", Font.PLAIN, 40);
-	private static final Font INFO_FONT = new Font("Arial", Font.PLAIN, 20);
+	private static final Font INFO_FONT = new Font("Arial", Font.PLAIN, 18);
 	private static final String RELOAD_MESSAGE = "Reloading map and resolving...";
 	private static final String UNSOLVABLE_MESSAGE = "No solution exists!";
-
+	private static final int MOVE_LIMIT = 15;
+	
 	protected IceMap map;
 	protected JPanel canvas;
 	protected int tileWidth;
@@ -52,8 +53,8 @@ public class SolutionVisualizer extends JFrame {
 	private long sourceLastModified;
 	private IceMapGenerator generator;
 
-	private NavigationNode[] bestSolution;
-	private LinkedList<NavigationNode[]> allSolutions;
+	protected int displayedSolution;
+	protected LinkedList<NavigationNode[]> allSolutions;
 	
 	private Timer timer;
 	private TimerTask solutionIterator;
@@ -88,15 +89,15 @@ public class SolutionVisualizer extends JFrame {
 		
 		// Get a solution to the given IceMap
 		IceMapSolver solver = new IceMapSolver(map);
-		LinkedList<NavigationNode[]> solutions = solver.solve(25);
+		LinkedList<NavigationNode[]> solutions = solver.solve(MOVE_LIMIT);
 		
 		if(solutions.size() > 0){
-			this.bestSolution = solutions.get(0);
+			this.displayedSolution = 0;
 			this.allSolutions = solutions;
 		}
 
 		this.initWindow();
-		this.initRepaintTimer();
+		this.restartRepaintTimer();
 		
 		this.addKeyListener(new KeyAdapter(){
 			@Override
@@ -123,7 +124,7 @@ public class SolutionVisualizer extends JFrame {
 	}
 	
 
-	private void reloadMap(){
+	protected void reloadMap(){
 		
 		if(!this.isReloadingMap){
 			this.isReloadingMap = true;
@@ -154,14 +155,14 @@ public class SolutionVisualizer extends JFrame {
 						
 						// Resolve the IceMap
 						IceMapSolver solver = new IceMapSolver(map);
-						LinkedList<NavigationNode[]> solutions = solver.solve(25);
+						LinkedList<NavigationNode[]> solutions = solver.solve(MOVE_LIMIT);
 
 						if(solutions.size() > 0){
-							bestSolution = solutions.get(0);
+							displayedSolution = 0;
 							allSolutions = solutions;
 						}
 						else{
-							bestSolution = null;
+							displayedSolution = -1;
 							allSolutions = null;
 						}
 
@@ -170,7 +171,7 @@ public class SolutionVisualizer extends JFrame {
 					}
 					
 					// Restart the repaint timer
-					initRepaintTimer();
+					restartRepaintTimer();
 					
 					setTitle("Map: " + map.getName() + " (Press R to reload file)");
 					isReloadingMap = false;
@@ -214,7 +215,7 @@ public class SolutionVisualizer extends JFrame {
 		this.setVisible(false);
 	}
 	
-	private void initRepaintTimer(){
+	protected void restartRepaintTimer(){
 
 		// Setup a timer task that iterates through the moves of the solution
 		
@@ -232,7 +233,7 @@ public class SolutionVisualizer extends JFrame {
 			public void run() {
 				repaint();
 				
-				if(bestSolution != null && solutionStep++ > bestSolution.length){
+				if(displayedSolution != -1 && solutionStep++ > allSolutions.get(displayedSolution).length){
 					this.cancel();
 				}
 			}
@@ -248,11 +249,11 @@ public class SolutionVisualizer extends JFrame {
 		this.drawMap(g);
 		this.drawSolution(g);
 		
-		g.setColor(Color.YELLOW);
-		g.setFont(INFO_FONT);
-		
 		if(allSolutions != null){
-			g.drawString("Number of other solutions: " + (allSolutions.size() - 1), 25, 25);
+			g.setColor(Color.YELLOW);
+			g.setFont(INFO_FONT);
+			g.drawString("Number of other solutions: " + (allSolutions.size() - 1), 5, 15);
+			g.drawString("Currently displayed solution: " + this.displayedSolution, 5, 35);
 		}
 		
 		if(this.isReloadingMap){
@@ -268,7 +269,7 @@ public class SolutionVisualizer extends JFrame {
 			g.drawString(RELOAD_MESSAGE, this.getWidth()/2 - messageWidth/2, this.getHeight()/2);
 			
 		}
-		else if(this.bestSolution == null){
+		else if(this.displayedSolution == -1){
 			Graphics2D g2d = (Graphics2D)g;
 			g2d.setColor(GLASS_COLOR);
 			g.fillRect(0, 0, this.getWidth(), this.getHeight());
@@ -324,13 +325,15 @@ public class SolutionVisualizer extends JFrame {
 	 */
 	private void drawSolution(Graphics g){
 	
-		if(bestSolution == null) return;
+		if(this.displayedSolution == -1) return;
 		
 		Graphics2D g2d = (Graphics2D) g; 
 		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		
-		for(int i = 0; i < solutionStep && i < bestSolution.length; i++){
-			NavigationNode move = this.bestSolution[i];
+		NavigationNode[] currentSolution = this.allSolutions.get(this.displayedSolution);
+		
+		for(int i = 0; i < solutionStep && i < currentSolution.length; i++){
+			NavigationNode move = currentSolution[i];
 			
 			// Draw the line from start tile to first move
 			if(i == 0){
@@ -344,7 +347,7 @@ public class SolutionVisualizer extends JFrame {
 			
 			// Keep drawing lines between moves
 			if(i != 0){
-				NavigationNode previousMove = this.bestSolution[i-1];
+				NavigationNode previousMove = currentSolution[i-1];
 				g.setColor(Color.GRAY);
                 g2d.setStroke(SOLUTION_LINE);
 				g.drawLine(tileToPixelX(previousMove.getDestinationX()) + tileWidth/2,

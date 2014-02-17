@@ -101,4 +101,13 @@ public class NavigationNode {
 		}
 	}
 
+	public boolean equals(Object o){
+		if(o instanceof NavigationNode){
+			NavigationNode node = (NavigationNode)o;
+			return node.x == this.x && node.y == this.y && node.direction == this.direction;
+			
+		}
+		return false;
+	}
+	
 }

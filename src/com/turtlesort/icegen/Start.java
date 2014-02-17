@@ -11,8 +11,8 @@ public class Start {
 
 	public static void main(String[] args){
 		//testSolver();
-		//testVisualizer();
-		testGenerator();
+		testVisualizer();
+		//testGenerator();
 	}
 	
 	private static void testSolver(){
@@ -65,7 +65,8 @@ public class Start {
 	
 	private static void testVisualizer(){
 		File source = new File("maps/map3.tmx");
-		SolutionVisualizer visualizer = new SolutionVisualizer(source);
+		//SolutionVisualizer visualizer = new SolutionVisualizer(source);
+		InteractiveVisualizer visualizer = new InteractiveVisualizer(IceMap.parseTMXFile(source));
 		visualizer.setVisible(true);
 	}
 
