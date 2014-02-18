@@ -34,6 +34,7 @@ import com.turtlesort.icegen.NavigationNode;
 @SuppressWarnings("serial")
 public class SolutionVisualizer extends JFrame {
 
+	
 	private static final int REPAINT_DELAY = 100; // Milliseconds; the smaller the number the faster the solution gets painted
 	private static final BasicStroke SOLUTION_LINE = new BasicStroke(10);
 	private static final Color BACKGROUND_COLOR = new Color(200,200,200);
@@ -42,7 +43,9 @@ public class SolutionVisualizer extends JFrame {
 	private static final Font INFO_FONT = new Font("Arial", Font.PLAIN, 18);
 	private static final String RELOAD_MESSAGE = "Reloading map and resolving...";
 	private static final String UNSOLVABLE_MESSAGE = "No solution exists!";
-	private static final int MOVE_LIMIT = 15;
+	
+	private static final int MOVE_LIMIT = 20;
+	private static final boolean PRUNE_SOLUTION_SET = true;
 	
 	protected IceMap map;
 	protected JPanel canvas;
@@ -89,7 +92,7 @@ public class SolutionVisualizer extends JFrame {
 		
 		// Get a solution to the given IceMap
 		IceMapSolver solver = new IceMapSolver(map);
-		LinkedList<NavigationNode[]> solutions = solver.solve(MOVE_LIMIT);
+		LinkedList<NavigationNode[]> solutions = solver.solve(MOVE_LIMIT, PRUNE_SOLUTION_SET);
 		
 		if(solutions.size() > 0){
 			this.displayedSolution = 0;
@@ -155,7 +158,7 @@ public class SolutionVisualizer extends JFrame {
 						
 						// Resolve the IceMap
 						IceMapSolver solver = new IceMapSolver(map);
-						LinkedList<NavigationNode[]> solutions = solver.solve(MOVE_LIMIT);
+						LinkedList<NavigationNode[]> solutions = solver.solve(MOVE_LIMIT, PRUNE_SOLUTION_SET);
 
 						if(solutions.size() > 0){
 							displayedSolution = 0;
@@ -252,8 +255,8 @@ public class SolutionVisualizer extends JFrame {
 		if(allSolutions != null){
 			g.setColor(Color.YELLOW);
 			g.setFont(INFO_FONT);
-			g.drawString("Number of other solutions: " + (allSolutions.size() - 1), 5, 15);
-			g.drawString("Currently displayed solution: " + this.displayedSolution, 5, 35);
+			g.drawString("Number of solutions: " + (allSolutions.size()), 5, 15);
+			g.drawString("Currently displaying solution #" + (this.displayedSolution+1), 5, 35);
 		}
 		
 		if(this.isReloadingMap){

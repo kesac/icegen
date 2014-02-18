@@ -53,8 +53,11 @@ public class IceMapSolver {
 	 * tile to the end tile.
 	 * @param moveLimit The maximum number of moves a solution should have.
 	 * @param pruneSolutionSet If true, compares the optimal solution with all other solutions discovered and removes
-	 * solutions whose ending sequence is identical to the ending sequence (last half) of the optimal solution. This is false by default.
-	 * @return A linked list of solutions. Each solution is an array of moves represented
+	 * solutions whose ending sequence is identical to the ending sequence (last half) of the optimal solution. 
+	 * If true, this will also remove solutions that have any consecutive left-right, right-left,
+	 * up-down, or down-up move pairs. (Any of those pairs of moves can be reduced to one move.)
+	 * This is false by default.
+	 * @return A linked list of solutions.  Each solution is an array of moves represented
 	 * as directions to take. The list is sorted in ascending order according to the number of moves per solution. The
 	 * first solution (at index 0) always has the least moves. If there are no solutions then
 	 * the linked list will be empty.
@@ -81,6 +84,9 @@ public class IceMapSolver {
 			
 			// Solutions that appear later in the linked list are guaranteed 
 			// to have equal or more moves than the optimal solution
+			
+			// Remove solutions whose ending sequence is identical to the optimal solution's
+			// ending sequence.
 			for(int i = solutions.size() - 1; i > 0; i--){
 				
 				boolean match = true;
@@ -95,6 +101,20 @@ public class IceMapSolver {
 				
 				if(match){
 					solutions.remove(i);
+				}
+			}/**/
+
+			
+			// Remove solutions that have any left-right, right-left, up-down, or down-up move pairs
+			// in their sequence.
+			for(int i = solutions.size() - 1; i >= 0; i--){
+				NavigationNode[] target = solutions.get(i);
+				
+				for(int j = 0; j < target.length - 1; j++){
+					if(this.isOpposite(target[j].getDirection(), target[j+1].getDirection())){
+						solutions.remove(i);
+						break;
+					}
 				}
 			}
 		}
@@ -223,6 +243,14 @@ public class IceMapSolver {
 		
 		return null;
 		
+	}
+	
+	private boolean isOpposite(Direction a, Direction b){
+		
+		return (a == Direction.DOWN && b == Direction.UP)
+				|| (a == Direction.UP && b == Direction.DOWN)
+				|| (a == Direction.LEFT && b == Direction.RIGHT)
+				|| (a == Direction.RIGHT && b == Direction.LEFT);
 	}
 	
 }
