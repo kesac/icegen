@@ -1,8 +1,5 @@
 package com.turtlesort.icegen.visualizer;
 
-
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
@@ -64,27 +61,7 @@ public class InteractiveVisualizer extends SolutionVisualizer{
 			
 		});
 
-		this.addKeyListener(new KeyAdapter(){
-
-
-			@Override
-			public void keyReleased(KeyEvent e) {
-				
-				if(e.getKeyChar() == '='){
-					if(displayedSolution + 1 < allSolutions.size()){
-						displayedSolution++;
-						restartRepaintTimer();
-					}
-				}
-				else if(e.getKeyChar() == '-'){
-					if(displayedSolution - 1 >= 0){
-						displayedSolution--;
-						restartRepaintTimer();
-					}
-				}
-			}
-			
-		});
+		
 	}
 
 

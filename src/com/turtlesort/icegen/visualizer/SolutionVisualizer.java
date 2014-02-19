@@ -108,6 +108,20 @@ public class SolutionVisualizer extends JFrame {
 				if(KeyEvent.VK_R == e.getKeyCode()){
 					reloadMap();
 				}
+				else if(e.getKeyChar() == '='){
+					displayedSolution++;
+					if(displayedSolution + 1 >= allSolutions.size()){
+						displayedSolution = 0;
+					}
+					restartRepaintTimer();
+				}
+				else if(e.getKeyChar() == '-'){
+					displayedSolution--;
+					if(displayedSolution - 1 < 0){
+						displayedSolution = allSolutions.size() - 1;
+					}
+					restartRepaintTimer();
+				}
 			}
 		});
 		

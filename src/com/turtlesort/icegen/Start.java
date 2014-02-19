@@ -65,8 +65,8 @@ public class Start {
 	
 	private static void testVisualizer(){
 		File source = new File("maps/map3.tmx");
-		//SolutionVisualizer visualizer = new SolutionVisualizer(source);
-		InteractiveVisualizer visualizer = new InteractiveVisualizer(IceMap.parseTMXFile(source));
+		SolutionVisualizer visualizer = new SolutionVisualizer(source);
+		//InteractiveVisualizer visualizer = new InteractiveVisualizer(IceMap.parseTMXFile(source));
 		visualizer.setVisible(true);
 	}
 
