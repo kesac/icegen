@@ -5,29 +5,71 @@ import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowFocusListener;
+import java.io.File;
 
 import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.KeyStroke;
 import javax.swing.UIManager;
+import javax.swing.filechooser.FileFilter;
 
 @SuppressWarnings("serial")
 public class SolverWindow extends JFrame {
 
+	private static final String WINDOW_TITLE = "Solver GUI 0.1";
+	
 	private SolverCanvas canvas;
+	private JFileChooser fileChooser;
+	private File sourceFile;
+	private long sourceLastModified;
+
 	
 	public SolverWindow(){
 		this.canvas = new SolverCanvas();
+		
 		this.initWindow();
+		this.initMenuBar();
+		
+		this.fileChooser = new JFileChooser();
+		this.fileChooser.setMultiSelectionEnabled(false);
+		this.fileChooser.setFileFilter(new FileFilter(){
+			@Override
+			public boolean accept(File f) {
+				return f.getName().endsWith(".tmx");
+			}
+
+			@Override
+			public String getDescription() {
+				return ".tmx (Tiled map)";
+			}
+		});
+		
+		this.addWindowFocusListener(new WindowFocusListener(){
+
+			@Override
+			public void windowGainedFocus(WindowEvent arg0) {
+				if(sourceFile != null && sourceFile.lastModified() > sourceLastModified){
+					reloadFile();
+				}
+			}
+
+			@Override
+			public void windowLostFocus(WindowEvent arg0) {}
+			
+		});
+		
 	}
 	
 	private void initWindow(){
 
 		// Build the window we will display the solution
-		this.setTitle("Solver GUI 0.1");
+		this.setTitle(WINDOW_TITLE);
 		this.setSize(800, 600);
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
@@ -38,8 +80,6 @@ public class SolverWindow extends JFrame {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
-		this.initMenuBar();
 		
 		// Center the window
 		Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
@@ -62,24 +102,29 @@ public class SolverWindow extends JFrame {
 		JMenuItem reloadItem = new JMenuItem("Reload File");
 		JMenuItem closeItem = new JMenuItem("Close");
 		
+		final JFrame window = this;
+		
 		openItem.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				
+				if(fileChooser.showOpenDialog(window) == JFileChooser.APPROVE_OPTION){
+					sourceFile = fileChooser.getSelectedFile();
+					reloadFile();
+				}
 			}
 		});
 		
 		reloadItem.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				
+				reloadFile();
 			}
 		});
 		
 		closeItem.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				
+				System.exit(0);
 			}
 		});
 		
@@ -115,4 +160,13 @@ public class SolverWindow extends JFrame {
 		this.setJMenuBar(menuBar);
 	}
 
+	private void reloadFile(){
+		
+		if(this.sourceFile == null) return;
+		
+		this.setTitle(WINDOW_TITLE + " - " + this.sourceFile.getAbsolutePath());
+		this.sourceLastModified = this.sourceFile.lastModified();
+		System.out.println("Reloaded " + this.sourceFile.getAbsolutePath());
+	}
+	
 }
