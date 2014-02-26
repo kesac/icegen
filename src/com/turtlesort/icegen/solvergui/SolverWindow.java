@@ -43,42 +43,52 @@ import com.turtlesort.icegen.NavigationNode;
 public class SolverWindow extends JFrame {
 
 	private static final String WINDOW_TITLE = "Solver GUI 0.1";
+	private static final String RELOAD_MESSAGE = "Reloading map and resolving...";
+	private static final String UNSOLVABLE_MESSAGE = "No solution exists!";
 	
-	private static final int REPAINT_DELAY = 100; // Milliseconds; the smaller the number the faster the solution gets painted
+	private static final Font MESSAGE_FONT = new Font("Arial", Font.PLAIN, 40);
+	private static final Font INFO_FONT = new Font("Arial", Font.PLAIN, 18);
+	
 	private static final BasicStroke SOLUTION_LINE = new BasicStroke(10);
 	private static final Color BACKGROUND_COLOR = new Color(200,200,200);
 	private static final Color GLASS_COLOR = new Color(0, 0, 0, 125);
-	private static final Font MESSAGE_FONT = new Font("Arial", Font.PLAIN, 40);
-	private static final Font INFO_FONT = new Font("Arial", Font.PLAIN, 18);
-	private static final String RELOAD_MESSAGE = "Reloading map and resolving...";
-	private static final String UNSOLVABLE_MESSAGE = "No solution exists!";
+	
+	private static final int ANIMATION_DELAY = 100; // Milliseconds; the smaller the number the faster the solution gets painted
 
-	private static final int MOVE_LIMIT = 20;
-	private static final boolean PRUNE_SOLUTION_SET = true;
+	private static final int DEFAULT_MOVE_LIMIT = 20;
+	private static final boolean DEFAULT_PRUNE_OPTION = true;
 
-	protected IceMap map;
-	protected JPanel canvas;
-	protected int tileWidth;
-	protected int tileHeight;
 
 	private JFileChooser fileChooser;
 	private File sourceFile;
-	private long sourceLastModified;
+	private long sourceLastModified;					// The larger the number the more recent the last modified timestamp
+	
+	private IceMap map;
+	private JPanel canvas;
+	private int tileWidth;								// In pixels; recalculated every repaint (as the window size can change)
+	private int tileHeight;								// In pixels; recalculated every repaint
 
-	protected int displayedSolution;
-	protected LinkedList<NavigationNode[]> allSolutions;
+	private int displayedSolution;						// Value will be -1 if there are no solutions
+	private LinkedList<NavigationNode[]> allSolutions;	// Will be empty if there are no solutions
 
 	private Timer timer;
 	private TimerTask solutionIterator;
 	private int solutionStep;
-
 	private boolean isReloadingMap;
 
+	/**
+	 * Constructor. Builds the window and initializes the internal state. You need to call setVisible() to make
+	 * it appear on the screen after instantiation. By default, no map is displayed when launched.
+	 */
 	public SolverWindow() {
 
 		this.initWindow();
 		this.initMenuBar();
-
+		
+		this.timer = new Timer();
+		
+		// Initialize the file dialog window. Ensure that only one .tmx file can be
+		// selected at a time
 		this.fileChooser = new JFileChooser();
 		this.fileChooser.setMultiSelectionEnabled(false);
 		this.fileChooser.setFileFilter(new FileFilter(){
@@ -93,8 +103,9 @@ public class SolverWindow extends JFrame {
 			}
 		});
 
-		this.timer = new Timer();
-
+		// Check if the file was modified when window focus is regained. If it has
+		// been modified, reload the file and re-solve it. This is a convenience feature
+		// for users who have Tiled and this application running side-by-side.
 		this.addWindowFocusListener(new WindowFocusListener(){
 
 			@Override
@@ -113,23 +124,11 @@ public class SolverWindow extends JFrame {
 
 	private void initWindow(){
 
-		// Build the window we will display the solution
 		this.setTitle(WINDOW_TITLE);
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setSize(600,600);
-
-		try {
-
-			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 		
-		// Center the window
-		Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
-		this.setLocation(screen.width/2 - this.getWidth()/2, screen.height/2 - this.getHeight()/2);
-
+		// Delegate the paint method in our canvas to methods in this class
 		this.canvas = new JPanel(){
 			public void paintComponent(Graphics g){
 				super.paintComponent(g);
@@ -138,9 +137,23 @@ public class SolverWindow extends JFrame {
 		};
 
 		this.add(this.canvas);
+		
+		try {
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		// Center the window
+		Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
+		this.setLocation(screen.width/2 - this.getWidth()/2, screen.height/2 - this.getHeight()/2);
+
 
 	}
 
+	/**
+	 * TODO: Use lambdas when they become available
+	 */
 	private void initMenuBar(){
 
 		JMenuBar menuBar = new JMenuBar();
@@ -228,6 +241,10 @@ public class SolverWindow extends JFrame {
 		this.setJMenuBar(menuBar);
 	}
 
+	/*
+	 * The repaint timer is responsible for animating the solution line on the canvas. This method
+	 * restarts the timer.
+	 */
 	private void restartRepaintTimer(){
 
 		// Setup a timer task that iterates through the moves of the solution
@@ -249,9 +266,12 @@ public class SolverWindow extends JFrame {
 				}
 			}
 		};
-		this.timer.schedule(this.solutionIterator, 0, REPAINT_DELAY);
+		this.timer.schedule(this.solutionIterator, 0, ANIMATION_DELAY);
 	}
 
+	/*
+	 * This method will also re-solve the reloaded map file.
+	 */
 	private void reloadFile(){
 
 		if(!this.isReloadingMap){
@@ -280,7 +300,7 @@ public class SolverWindow extends JFrame {
 
 						// Resolve the IceMap
 						IceMapSolver solver = new IceMapSolver(map);
-						LinkedList<NavigationNode[]> solutions = solver.solve(MOVE_LIMIT, PRUNE_SOLUTION_SET);
+						LinkedList<NavigationNode[]> solutions = solver.solve(DEFAULT_MOVE_LIMIT, DEFAULT_PRUNE_OPTION);
 
 						if(solutions.size() > 0){
 							displayedSolution = 0;
@@ -321,7 +341,7 @@ public class SolverWindow extends JFrame {
 		restartRepaintTimer();
 	}
 	
-	public void draw(Graphics g) {
+	private void draw(Graphics g) {
 
 		if(this.map == null) return;
 
@@ -374,7 +394,7 @@ public class SolverWindow extends JFrame {
 
 	}
 
-	/**
+	/*
 	 * Draws each tile of the IceMap.
 	 */
 	private void drawMap(Graphics g){
@@ -409,7 +429,7 @@ public class SolverWindow extends JFrame {
 		}
 	}
 
-	/**
+	/*
 	 * Draws a line indicating the solution for the IceMap.
 	 */
 	private void drawSolution(Graphics g){
@@ -455,6 +475,7 @@ public class SolverWindow extends JFrame {
 
 	}
 
+	// Utility methods
 	private int tileToPixelX(int tileX){
 		return (tileX * tileWidth) + tileX;
 	}
