@@ -1,6 +1,7 @@
 package com.turtlesort.icegen.solvergui;
 
 import java.awt.BasicStroke;
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
@@ -23,12 +24,17 @@ import java.util.TimerTask;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JSlider;
 import javax.swing.KeyStroke;
 import javax.swing.UIManager;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileFilter;
 
 import com.turtlesort.icegen.IceMap;
@@ -55,10 +61,6 @@ public class SolverWindow extends JFrame {
 	
 	private static final int ANIMATION_DELAY = 100; // Milliseconds; the smaller the number the faster the solution gets painted
 
-	private static final int DEFAULT_MOVE_LIMIT = 20;
-	private static final boolean DEFAULT_PRUNE_OPTION = true;
-
-
 	private JFileChooser fileChooser;
 	private File sourceFile;
 	private long sourceLastModified;					// The larger the number the more recent the last modified timestamp
@@ -74,7 +76,13 @@ public class SolverWindow extends JFrame {
 	private Timer timer;
 	private TimerTask solutionIterator;
 	private int solutionStep;
+	private int moveLimit;
+	private boolean pruneSolutionSet;
 	private boolean isReloadingMap;
+	
+	private JLabel moveLimitLabel;
+	private JSlider moveLimitSlider;
+	private JPanel moveLimitPanel;
 
 	/**
 	 * Constructor. Builds the window and initializes the internal state. You need to call setVisible() to make
@@ -84,8 +92,11 @@ public class SolverWindow extends JFrame {
 
 		this.initWindow();
 		this.initMenuBar();
+		this.initMoveLimitDialogWindow();
 		
 		this.timer = new Timer();
+		this.pruneSolutionSet = true;
+		this.moveLimit = 20;
 		
 		// Initialize the file dialog window. Ensure that only one .tmx file can be
 		// selected at a time
@@ -148,7 +159,6 @@ public class SolverWindow extends JFrame {
 		Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
 		this.setLocation(screen.width/2 - this.getWidth()/2, screen.height/2 - this.getHeight()/2);
 
-
 	}
 
 	/**
@@ -204,7 +214,7 @@ public class SolverWindow extends JFrame {
 
 		JMenuItem nextItem = new JMenuItem("Next Solution");
 		JMenuItem previousItem = new JMenuItem("Previous Solution");
-		JCheckBoxMenuItem pruneItem = new JCheckBoxMenuItem("Prune Solution Set");
+		final JCheckBoxMenuItem pruneItem = new JCheckBoxMenuItem("Prune Solution Set");
 		JMenuItem moveLimitItem = new JMenuItem("Adjust Move Limit");
 
 		nextItem.addActionListener(new ActionListener(){
@@ -225,6 +235,23 @@ public class SolverWindow extends JFrame {
 			}
 		});
 		
+		pruneItem.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				pruneSolutionSet = pruneItem.isSelected();
+				if(map != null){
+					reloadFile(true);
+				}
+			}
+		});
+		
+		moveLimitItem.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				showMoveLimitDialog();
+			}
+		});
+		
 		nextItem.setAccelerator(KeyStroke.getKeyStroke('='));
 		previousItem.setAccelerator(KeyStroke.getKeyStroke('-'));
 		pruneItem.setSelected(true);
@@ -241,6 +268,28 @@ public class SolverWindow extends JFrame {
 		this.setJMenuBar(menuBar);
 	}
 
+	private void initMoveLimitDialogWindow(){
+		moveLimitPanel = new JPanel();
+		moveLimitPanel.setLayout(new BorderLayout());
+		
+		moveLimitLabel = new JLabel("20");
+		moveLimitSlider = new JSlider(JSlider.HORIZONTAL,1,30,20);
+		moveLimitSlider.setMajorTickSpacing(3);
+		moveLimitSlider.setMinorTickSpacing(1);
+		moveLimitSlider.setPaintLabels(true);
+		moveLimitSlider.setPaintTicks(true);
+		
+		moveLimitSlider.addChangeListener(new ChangeListener(){
+			@Override
+			public void stateChanged(ChangeEvent arg0) {
+				moveLimitLabel.setText(String.valueOf(moveLimitSlider.getValue()));
+			}
+		});
+		
+		moveLimitPanel.add(moveLimitLabel, BorderLayout.EAST);
+		moveLimitPanel.add(moveLimitSlider, BorderLayout.CENTER);
+	}
+	
 	/*
 	 * The repaint timer is responsible for animating the solution line on the canvas. This method
 	 * restarts the timer.
@@ -269,10 +318,15 @@ public class SolverWindow extends JFrame {
 		this.timer.schedule(this.solutionIterator, 0, ANIMATION_DELAY);
 	}
 
-	/*
-	 * This method will also re-solve the reloaded map file.
-	 */
 	private void reloadFile(){
+		reloadFile(false);
+	}
+	
+	/*
+	 * This method will also re-solve the reloaded map file if it has been changed
+	 * or if true has been given as an argument.
+	 */
+	private void reloadFile(final boolean forceResolve){
 
 		if(!this.isReloadingMap){
 			this.isReloadingMap = true;
@@ -288,19 +342,17 @@ public class SolverWindow extends JFrame {
 
 					IceMap oldMap = map;
 
-					// If we read from a file in the first place and if that file's
-					// last modified time stamp changed, reread the file again
+					// If the file's last modified time stamp changed, reread the file again
 					if(sourceFile != null && sourceFile.lastModified() > sourceLastModified){
-						// Read the file again
 						map = IceMap.parseTMXFile(sourceFile);
 						sourceLastModified = sourceFile.lastModified();
 					}
 
-					if(oldMap != map){
+					// Resolve the IceMap if the time stamp changed or if explicitly told to do so
+					if(oldMap != map || forceResolve){
 
-						// Resolve the IceMap
 						IceMapSolver solver = new IceMapSolver(map);
-						LinkedList<NavigationNode[]> solutions = solver.solve(DEFAULT_MOVE_LIMIT, DEFAULT_PRUNE_OPTION);
+						LinkedList<NavigationNode[]> solutions = solver.solve(moveLimit, pruneSolutionSet);
 
 						if(solutions.size() > 0){
 							displayedSolution = 0;
@@ -339,6 +391,19 @@ public class SolverWindow extends JFrame {
 			displayedSolution = allSolutions.size() - 1;
 		}
 		restartRepaintTimer();
+	}
+	
+
+	
+	private void showMoveLimitDialog() {
+		moveLimitSlider.setValue(moveLimit);
+		moveLimitLabel.setText(String.valueOf(moveLimit));
+		
+		int status = JOptionPane.showOptionDialog(this, moveLimitPanel, "Choose move limit:", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null);
+		if(status == JOptionPane.OK_OPTION){
+			moveLimit = moveLimitSlider.getValue();
+			reloadFile(true);
+		}
 	}
 	
 	private void draw(Graphics g) {
