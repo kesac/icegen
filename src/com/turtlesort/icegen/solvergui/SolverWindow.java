@@ -21,6 +21,8 @@ import java.util.LinkedList;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -32,6 +34,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.KeyStroke;
+import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -53,7 +56,7 @@ public class SolverWindow extends JFrame {
 	private static final String UNSOLVABLE_MESSAGE = "No solution exists!";
 	
 	private static final Font MESSAGE_FONT = new Font("Arial", Font.PLAIN, 40);
-	private static final Font INFO_FONT = new Font("Arial", Font.PLAIN, 18);
+	//private static final Font INFO_FONT = new Font("Arial", Font.PLAIN, 18);
 	
 	private static final BasicStroke SOLUTION_LINE = new BasicStroke(10);
 	private static final Color BACKGROUND_COLOR = new Color(200,200,200);
@@ -83,6 +86,7 @@ public class SolverWindow extends JFrame {
 	private JLabel moveLimitLabel;
 	private JSlider moveLimitSlider;
 	private JPanel moveLimitPanel;
+	private JLabel statusLabel;
 
 	/**
 	 * Constructor. Builds the window and initializes the internal state. You need to call setVisible() to make
@@ -138,6 +142,7 @@ public class SolverWindow extends JFrame {
 		this.setTitle(WINDOW_TITLE);
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setSize(600,600);
+		this.setLayout(new BorderLayout());
 		
 		// Delegate the paint method in our canvas to methods in this class
 		this.canvas = new JPanel(){
@@ -148,6 +153,17 @@ public class SolverWindow extends JFrame {
 		};
 
 		this.add(this.canvas);
+		
+		JPanel statusBarPanel = new JPanel();
+		statusBarPanel.setLayout(new BoxLayout(statusBarPanel, BoxLayout.X_AXIS));
+		
+		statusLabel = new JLabel();
+		statusLabel.setHorizontalAlignment(SwingConstants.RIGHT);		
+		
+		statusBarPanel.add(Box.createHorizontalGlue());
+		statusBarPanel.add(statusLabel);
+		
+		this.add(statusBarPanel, BorderLayout.SOUTH);
 		
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -367,6 +383,7 @@ public class SolverWindow extends JFrame {
 
 					// Restart the repaint timer
 					restartRepaintTimer();
+					updateStatusLabel();
 
 					setTitle(WINDOW_TITLE + " - " + sourceFile.getAbsolutePath());
 					isReloadingMap = false;
@@ -379,10 +396,11 @@ public class SolverWindow extends JFrame {
 
 	private void showNextSolution(){
 		displayedSolution++;
-		if(displayedSolution + 1 >= allSolutions.size()){
+		if(displayedSolution + 1 > allSolutions.size()){
 			displayedSolution = 0;
 		}
 		restartRepaintTimer();
+		updateStatusLabel();
 	}
 	
 	private void showPreviousSolution(){
@@ -391,6 +409,7 @@ public class SolverWindow extends JFrame {
 			displayedSolution = allSolutions.size() - 1;
 		}
 		restartRepaintTimer();
+		updateStatusLabel();
 	}
 	
 
@@ -415,7 +434,7 @@ public class SolverWindow extends JFrame {
 
 		Container contentPane = this.getContentPane();		
 		int canvasWidth = contentPane.getWidth();
-		int canvasHeight = contentPane.getHeight();
+		int canvasHeight = contentPane.getHeight() - this.statusLabel.getHeight();
 
 		this.tileWidth = canvasWidth / map.getWidth();
 		this.tileHeight = canvasHeight / map.getHeight();
@@ -423,12 +442,14 @@ public class SolverWindow extends JFrame {
 		this.drawMap(g);
 		this.drawSolution(g);
 
+		/*
 		if(allSolutions != null){
 			g.setColor(Color.YELLOW);
 			g.setFont(INFO_FONT);
 			g.drawString("Number of solutions: " + (allSolutions.size()), 5, 15);
 			g.drawString("Currently displaying solution #" + (this.displayedSolution+1), 5, 35);
 		}
+		/**/
 
 		if(this.isReloadingMap){
 			Graphics2D g2d = (Graphics2D)g;
@@ -540,6 +561,28 @@ public class SolverWindow extends JFrame {
 
 	}
 
+	private void updateStatusLabel(){
+		
+		StringBuilder s = new StringBuilder();
+		
+		s.append("Move limit: ");
+		s.append(this.moveLimit);
+		s.append(" | ");
+		
+		s.append("Solution set pruning: ");
+		s.append(this.pruneSolutionSet ? "On" : "Off");
+		s.append(" | ");
+		
+		s.append("Total solutions: ");
+		s.append(this.allSolutions.size());
+		s.append(" | ");
+		
+		s.append("Currently displaying solution #");
+		s.append((this.displayedSolution + 1));
+		
+		this.statusLabel.setText(s.toString());
+	}
+	
 	// Utility methods
 	private int tileToPixelX(int tileX){
 		return (tileX * tileWidth) + tileX;
