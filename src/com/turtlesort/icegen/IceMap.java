@@ -63,23 +63,27 @@ public class IceMap {
 	}
 		
 	/**
-	 * Sets the specified tile as the starting location of a player.
+	 * Sets the specified tile as the starting location of a player. Will also
+	 * set the tile type of this location to floor. 
 	 * @param x - x-coordinate of tile
 	 * @param y - y-coordinate of tile
 	 */
 	public void setStartTile(int x, int y){
 		this.startX = x;
 		this.startY = y;
+		this.setTileType(x, y, Tile.FLOOR);
 	}
 	
 	/**
-	 * Sets the specified tile as the location the player must make their way to.
+	 * Sets the specified tile as the location the player must make their way to. Will also
+	 * set the tile type of this location to floor.
 	 * @param x - x-coordinate of tile
 	 * @param y - y-coordinate of tile
 	 */
 	public void setEndTile(int x, int y){
 		this.endX = x;
 		this.endY = y;
+		this.setTileType(x, y, Tile.FLOOR);
 	}
 	
 	/**

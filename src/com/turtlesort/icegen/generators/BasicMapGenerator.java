@@ -1,6 +1,9 @@
-package com.turtlesort.icegen;
+package com.turtlesort.icegen.generators;
 
 import java.util.Random;
+
+import com.turtlesort.icegen.IceMap;
+import com.turtlesort.icegen.IceMap.Tile;
 
 /**
  * A very simple IceMap generator. Doesn't produce very elegant or difficult maps.

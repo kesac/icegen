@@ -23,9 +23,9 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 import com.turtlesort.icegen.IceMap;
-import com.turtlesort.icegen.IceMapGenerator;
 import com.turtlesort.icegen.IceMapSolver;
 import com.turtlesort.icegen.NavigationNode;
+import com.turtlesort.icegen.generators.IceMapGenerator;
 
 /**
  * Draws an IceMap in a JFrame, finds a solution to the map with the least amount of moves, then
@@ -96,8 +96,9 @@ public class SolutionVisualizer extends JFrame {
 		
 		if(solutions.size() > 0){
 			this.displayedSolution = 0;
-			this.allSolutions = solutions;
 		}
+		
+		this.allSolutions = solutions;
 
 		this.initWindow();
 		this.restartRepaintTimer();
@@ -250,7 +251,10 @@ public class SolutionVisualizer extends JFrame {
 			public void run() {
 				repaint();
 				
-				if(displayedSolution != -1 && solutionStep++ > allSolutions.get(displayedSolution).length){
+				if(allSolutions == null || allSolutions.isEmpty()){
+					this.cancel();
+				}
+				else if(displayedSolution != -1 && solutionStep++ > allSolutions.get(displayedSolution).length){
 					this.cancel();
 				}
 			}
@@ -342,7 +346,7 @@ public class SolutionVisualizer extends JFrame {
 	 */
 	private void drawSolution(Graphics g){
 	
-		if(this.displayedSolution == -1) return;
+		if(this.displayedSolution == -1 || this.allSolutions.isEmpty()) return;
 		
 		Graphics2D g2d = (Graphics2D) g; 
 		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
